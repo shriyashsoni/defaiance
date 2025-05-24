@@ -2,8 +2,13 @@
 DEFAIANCE is a decentralized investment platform that enables users to invest in tokenized startup equity using blockchain technology, AI-driven analytics, and DAO governance. Built for the future of finance, DEFAIANCE simplifies capital raising and investing through transparency, automation, and community-driven decision-making.
 ---
 🌐 Live Demo
-Check out the live version of the platform (if hosted):
 
+![Screenshot 2025-05-24 183512](https://github.com/user-attachments/assets/885a0eba-b440-44e9-964f-69602414c652)
+![Screenshot 2025-05-24 183525](https://github.com/user-attachments/assets/0944dab6-a243-4bcc-82e9-a60f306a3219)
+![Screenshot 2025-05-24 183714](https://github.com/user-attachments/assets/bc4816f5-385c-439a-9d9b-27cf9e3b50e2)
+![Screenshot 2025-05-24 183736](https://github.com/user-attachments/assets/7660b091-5134-4a90-95f9-cfe394d321cf)
+![Screenshot 2025-05-24 183813](https://github.com/user-attachments/assets/90cecb96-f079-4494-9f6e-b2bec2aa0d99)
+---
 🔗 defaiance.xyz
 ----
 ✨ Features
