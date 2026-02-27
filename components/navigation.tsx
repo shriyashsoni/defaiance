@@ -60,7 +60,7 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
+    <nav className="fixed top-0 w-full z-50 bg-black/85 backdrop-blur-md border-b border-yellow-400/30">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <motion.div
           className="flex items-center space-x-3"
@@ -116,7 +116,7 @@ export default function Navigation() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="bg-slate-900 border-white/10">
+              <SheetContent side="right" className="bg-black border-yellow-400/30">
                 <div className="flex flex-col space-y-6 mt-8">
                   {navItems.map((item) => (
                     <Link

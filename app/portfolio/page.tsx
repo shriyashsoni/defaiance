@@ -1,459 +1,406 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  Area,
-  AreaChart,
-} from "recharts"
-import { TrendingUp, TrendingDown, DollarSign, Target, Users, Wallet, ArrowUpRight, Activity } from "lucide-react"
+import { Wallet, Coins, Layers, Landmark, Gavel, Store, Rocket, ExternalLink } from "lucide-react"
 import Navigation from "@/components/navigation"
 import AnimatedBackground from "@/components/animated-background"
-import WalletConnect from "@/components/wallet-connect"
+import { ABIS, CONTRACTS, getContract, getReadProvider, getWalletContext, getWalletSigner, toEth } from "@/lib/onchain"
+import Link from "next/link"
+import LiveMarketsPanel from "@/components/live-markets-panel"
+import { parseEther } from "ethers"
 
-export default function Portfolio() {
-  const [isConnected, setIsConnected] = useState(false)
-  const [portfolioValue, setPortfolioValue] = useState(0)
-  const [totalInvested, setTotalInvested] = useState(0)
-  const [totalReturns, setTotalReturns] = useState(0)
+type Holding = {
+  pool: string
+  name: string
+  symbol: string
+  shares: bigint
+}
 
-  // Mock portfolio data
-  const portfolioData = [
-    { name: "QuantumAI Labs", value: 2500, tokens: 10000, change: 15.2, industry: "AI/ML" },
-    { name: "GreenTech Solutions", value: 1200, tokens: 8000, change: -3.1, industry: "CleanTech" },
-    { name: "BioMed Innovations", value: 800, tokens: 10000, change: 8.7, industry: "Healthcare" },
-    { name: "CryptoSecure", value: 1800, tokens: 6000, change: 12.4, industry: "Fintech" },
-    { name: "SpaceLogistics", value: 1000, tokens: 5000, change: 5.8, industry: "Aerospace" },
-  ]
+export default function PortfolioPage() {
+  const [loading, setLoading] = useState(true)
+  const [account, setAccount] = useState<string | null>(null)
+  const [walletBNB, setWalletBNB] = useState<bigint>(0n)
+  const [walletDFAI, setWalletDFAI] = useState<bigint>(0n)
+  const [stakedDFAI, setStakedDFAI] = useState<bigint>(0n)
+  const [holdings, setHoldings] = useState<Holding[]>([])
+  const [proposalCount, setProposalCount] = useState<bigint>(0n)
+  const [recentProposalIds, setRecentProposalIds] = useState<number[]>([])
+  const [poolCount, setPoolCount] = useState(0)
+  const [totalPoolAssets, setTotalPoolAssets] = useState<bigint>(0n)
+  const [stakeAmount, setStakeAmount] = useState("10")
+  const [stakingTxMessage, setStakingTxMessage] = useState<string | null>(null)
+  const [stakingBusy, setStakingBusy] = useState(false)
 
-  const performanceData = [
-    { month: "Jan", value: 5000, invested: 5000 },
-    { month: "Feb", value: 5200, invested: 5000 },
-    { month: "Mar", value: 5800, invested: 6000 },
-    { month: "Apr", value: 6200, invested: 6000 },
-    { month: "May", value: 6800, invested: 7000 },
-    { month: "Jun", value: 7300, invested: 7000 },
-  ]
+  const load = async () => {
+    setLoading(true)
+    try {
+      const provider = getReadProvider()
+      const { account: walletAccount } = await getWalletContext()
+      setAccount(walletAccount)
 
-  const industryDistribution = [
-    { name: "AI/ML", value: 35, color: "#3B82F6" },
-    { name: "Fintech", value: 25, color: "#8B5CF6" },
-    { name: "CleanTech", value: 17, color: "#10B981" },
-    { name: "Healthcare", value: 13, color: "#F59E0B" },
-    { name: "Aerospace", value: 10, color: "#EF4444" },
-  ]
+      if (!walletAccount) {
+        setWalletBNB(0n)
+        setWalletDFAI(0n)
+        setStakedDFAI(0n)
+        setHoldings([])
+        return
+      }
 
-  const recentActivity = [
-    {
-      type: "investment",
-      startup: "QuantumAI Labs",
-      amount: 500,
-      date: "2 hours ago",
-      icon: <ArrowUpRight className="h-4 w-4" />,
-    },
-    {
-      type: "dividend",
-      startup: "GreenTech Solutions",
-      amount: 25,
-      date: "1 day ago",
-      icon: <DollarSign className="h-4 w-4" />,
-    },
-    { type: "vote", startup: "BioMed Innovations", amount: 0, date: "3 days ago", icon: <Users className="h-4 w-4" /> },
-    {
-      type: "investment",
-      startup: "CryptoSecure",
-      amount: 300,
-      date: "1 week ago",
-      icon: <ArrowUpRight className="h-4 w-4" />,
-    },
-  ]
+      const token = getContract(CONTRACTS.defaianceToken, ABIS.erc20, provider)
+      const staking = getContract(CONTRACTS.stakingRewards, ABIS.staking, provider)
+      const factory = getContract(CONTRACTS.startupPoolFactory, ABIS.poolFactory, provider)
+      const dao = getContract(CONTRACTS.defaianceDAO, ABIS.dao, provider)
+
+      const [bnb, dfai, staked, poolCountRaw, proposalCountRaw] = await Promise.all([
+        provider.getBalance(walletAccount),
+        token.balanceOf(walletAccount),
+        staking.balanceOf(walletAccount),
+        factory.poolsCount(),
+        dao.proposalCount(),
+      ])
+
+      setWalletBNB(bnb)
+      setWalletDFAI(dfai)
+      setStakedDFAI(staked)
+      setPoolCount(Number(poolCountRaw))
+      setProposalCount(proposalCountRaw)
+
+      const latestProposal = Number(proposalCountRaw)
+      const proposalIds: number[] = []
+      for (let id = latestProposal; id >= Math.max(1, latestProposal - 2); id--) {
+        proposalIds.push(id)
+      }
+      setRecentProposalIds(proposalIds)
+
+      const rows: Holding[] = []
+      let assetsAcc = 0n
+      for (let index = 0; index < Number(poolCountRaw); index++) {
+        const poolAddress = await factory.allPools(index)
+        const info = await factory.poolInfo(poolAddress)
+        const pool = getContract(poolAddress, ABIS.investmentPool, provider)
+        const [shares, accountedAssets] = await Promise.all([
+          pool.sharesOf(walletAccount),
+          pool.accountedAssets(),
+        ])
+
+        assetsAcc += accountedAssets
+        if (shares > 0n) {
+          rows.push({ pool: poolAddress, name: info.name, symbol: info.symbol, shares })
+        }
+      }
+
+      setTotalPoolAssets(assetsAcc)
+      setHoldings(rows)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Calculate portfolio metrics
-    const totalValue = portfolioData.reduce((sum, item) => sum + item.value, 0)
-    const totalInv = 7000 // Mock total invested
-    const returns = totalValue - totalInv
-
-    setPortfolioValue(totalValue)
-    setTotalInvested(totalInv)
-    setTotalReturns(returns)
+    load()
+    const interval = window.setInterval(load, 20000)
+    return () => window.clearInterval(interval)
   }, [])
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount)
+  const totalShares = useMemo(() => holdings.reduce((acc, item) => acc + item.shares, 0n), [holdings])
+
+  const handleStake = async () => {
+    const signer = await getWalletSigner()
+    if (!signer) {
+      setStakingTxMessage("Connect wallet first.")
+      return
+    }
+
+    try {
+      setStakingBusy(true)
+      const amount = parseEther(stakeAmount || "0")
+      if (amount <= 0n) {
+        setStakingTxMessage("Enter valid stake amount.")
+        return
+      }
+
+      const token = getContract(CONTRACTS.defaianceToken, ABIS.erc20, signer)
+      const staking = getContract(CONTRACTS.stakingRewards, ABIS.staking, signer)
+
+      setStakingTxMessage("Checking allowance...")
+      const owner = await signer.getAddress()
+      const allowance = await token.allowance(owner, CONTRACTS.stakingRewards)
+      if (allowance < amount) {
+        const approveTx = await token.approve(CONTRACTS.stakingRewards, amount)
+        await approveTx.wait()
+      }
+
+      setStakingTxMessage("Submitting stake transaction...")
+      const stakeTx = await staking.stake(amount)
+      await stakeTx.wait()
+      setStakingTxMessage("Stake successful.")
+      await load()
+    } catch (error) {
+      setStakingTxMessage(error instanceof Error ? error.message : "Stake failed")
+    } finally {
+      setStakingBusy(false)
+    }
   }
 
-  const getChangeColor = (change: number) => {
-    return change >= 0 ? "text-green-400" : "text-red-400"
+  const handleUnstake = async () => {
+    const signer = await getWalletSigner()
+    if (!signer) {
+      setStakingTxMessage("Connect wallet first.")
+      return
+    }
+
+    try {
+      setStakingBusy(true)
+      const amount = parseEther(stakeAmount || "0")
+      if (amount <= 0n) {
+        setStakingTxMessage("Enter valid unstake amount.")
+        return
+      }
+
+      setStakingTxMessage("Submitting unstake transaction...")
+      const staking = getContract(CONTRACTS.stakingRewards, ABIS.staking, signer)
+      const tx = await staking.withdraw(amount)
+      await tx.wait()
+      setStakingTxMessage("Unstake successful.")
+      await load()
+    } catch (error) {
+      setStakingTxMessage(error instanceof Error ? error.message : "Unstake failed")
+    } finally {
+      setStakingBusy(false)
+    }
   }
 
-  const getChangeIcon = (change: number) => {
-    return change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />
-  }
+  const handleClaim = async () => {
+    const signer = await getWalletSigner()
+    if (!signer) {
+      setStakingTxMessage("Connect wallet first.")
+      return
+    }
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        <AnimatedBackground />
-        <Navigation />
-
-        <div className="container mx-auto px-4 pt-24 pb-12">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm max-w-md w-full">
-              <CardHeader className="text-center">
-                <Wallet className="h-16 w-16 text-blue-400 mx-auto mb-4" />
-                <CardTitle className="text-white text-2xl">Connect Your Wallet</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Connect your wallet to view your investment portfolio and track your returns
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <WalletConnect onConnect={() => setIsConnected(true)} />
-                <p className="text-gray-500 text-sm mt-4">
-                  Supported wallets: MetaMask, WalletConnect, Coinbase Wallet
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    )
+    try {
+      setStakingBusy(true)
+      setStakingTxMessage("Submitting reward claim transaction...")
+      const staking = getContract(CONTRACTS.stakingRewards, ABIS.staking, signer)
+      const tx = await staking.getReward()
+      await tx.wait()
+      setStakingTxMessage("Reward claim successful.")
+      await load()
+    } catch (error) {
+      setStakingTxMessage(error instanceof Error ? error.message : "Claim failed")
+    } finally {
+      setStakingBusy(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-black text-white">
       <AnimatedBackground />
       <Navigation />
 
-      <div className="container mx-auto px-4 pt-24 pb-12">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-8"
-        >
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Portfolio Dashboard
-          </h1>
-          <p className="text-xl text-gray-400">
-            Track your investments, monitor performance, and manage your Web3 portfolio
-          </p>
+      <div className="container mx-auto px-4 pt-24 pb-12 relative z-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-5xl md:text-6xl font-bold mb-3 gradient-text font-futuristic">On-Chain Portfolio</h1>
+          <p className="text-white/70 text-lg">Wallet balances and pool shares read directly from deployed contracts.</p>
         </motion.div>
 
-        {/* Portfolio Overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
-        >
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">Total Portfolio Value</p>
-                  <p className="text-2xl font-bold text-white">{formatCurrency(portfolioValue)}</p>
-                </div>
-                <div className="text-blue-400">
-                  <PieChart className="h-8 w-8" />
-                </div>
-              </div>
+        {!account ? (
+          <Card className="glass-card">
+            <CardContent className="p-8 text-center">
+              <Wallet className="h-12 w-12 mx-auto text-yellow-400 mb-3" />
+              <div className="text-xl font-semibold">Connect your wallet</div>
+              <div className="text-white/70 text-sm mt-1">Portfolio data appears automatically after wallet connection.</div>
             </CardContent>
           </Card>
-
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">Total Invested</p>
-                  <p className="text-2xl font-bold text-white">{formatCurrency(totalInvested)}</p>
-                </div>
-                <div className="text-purple-400">
-                  <Target className="h-8 w-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">Total Returns</p>
-                  <p className={`text-2xl font-bold ${getChangeColor(totalReturns)}`}>{formatCurrency(totalReturns)}</p>
-                </div>
-                <div className={getChangeColor(totalReturns)}>{getChangeIcon(totalReturns)}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">ROI</p>
-                  <p className={`text-2xl font-bold ${getChangeColor(totalReturns)}`}>
-                    {((totalReturns / totalInvested) * 100).toFixed(1)}%
-                  </p>
-                </div>
-                <div className="text-green-400">
-                  <Activity className="h-8 w-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-white/5 border border-white/10 mb-8">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-blue-500">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="holdings" className="data-[state=active]:bg-purple-500">
-              Holdings
-            </TabsTrigger>
-            <TabsTrigger value="performance" className="data-[state=active]:bg-pink-500">
-              Performance
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="data-[state=active]:bg-orange-500">
-              Activity
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Portfolio Distribution */}
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-white">Portfolio Distribution</CardTitle>
-                  <CardDescription className="text-gray-400">Investment allocation by industry</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={industryDistribution}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {industryDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <Card className="glass-card">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">Wallet BNB</div>
+                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(walletBNB)}</div>
                 </CardContent>
               </Card>
-
-              {/* Performance Chart */}
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-white">Portfolio Performance</CardTitle>
-                  <CardDescription className="text-gray-400">Value vs invested over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={performanceData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                      <XAxis dataKey="month" stroke="#9CA3AF" />
-                      <YAxis stroke="#9CA3AF" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1F2937",
-                          border: "1px solid #374151",
-                          borderRadius: "8px",
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="value"
-                        stackId="1"
-                        stroke="#3B82F6"
-                        fill="#3B82F6"
-                        fillOpacity={0.3}
-                        name="Portfolio Value"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="invested"
-                        stackId="2"
-                        stroke="#8B5CF6"
-                        fill="#8B5CF6"
-                        fillOpacity={0.3}
-                        name="Total Invested"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+              <Card className="glass-card">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">Wallet DFAI</div>
+                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(walletDFAI)}</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">Staked DFAI</div>
+                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(stakedDFAI)}</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">Total Pool Shares</div>
+                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(totalShares)}</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">Marketplace Pools</div>
+                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : poolCount}</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">DAO Proposals</div>
+                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : proposalCount.toString()}</div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Top Holdings */}
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+            <LiveMarketsPanel />
+
+            <Card className="glass-card mb-8">
               <CardHeader>
-                <CardTitle className="text-white">Top Holdings</CardTitle>
-                <CardDescription className="text-gray-400">Your largest investments by value</CardDescription>
+                <CardTitle className="text-yellow-300 font-futuristic flex items-center gap-2">
+                  <Coins className="h-5 w-5" />
+                  Staking Actions (On-Chain)
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {portfolioData.slice(0, 3).map((holding, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                          <span className="text-white font-bold">{holding.name.charAt(0)}</span>
-                        </div>
-                        <div>
-                          <h3 className="text-white font-semibold">{holding.name}</h3>
-                          <p className="text-gray-400 text-sm">{holding.industry}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-white font-semibold">{formatCurrency(holding.value)}</p>
-                        <p className={`text-sm ${getChangeColor(holding.change)}`}>
-                          {holding.change > 0 ? "+" : ""}
-                          {holding.change.toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex flex-col md:flex-row gap-3 md:items-center mb-3">
+                  <input
+                    value={stakeAmount}
+                    onChange={(event) => setStakeAmount(event.target.value)}
+                    className="h-10 rounded-lg border border-yellow-400/40 bg-black px-3 text-white"
+                    placeholder="Amount DFAI"
+                  />
+                  <Button className="bg-yellow-400 hover:bg-yellow-300 text-black" disabled={stakingBusy} onClick={handleStake}>
+                    Approve + Stake
+                  </Button>
+                  <Button variant="outline" className="border-yellow-400/40 text-white" disabled={stakingBusy} onClick={handleUnstake}>
+                    Unstake
+                  </Button>
+                  <Button variant="outline" className="border-yellow-400/40 text-white" disabled={stakingBusy} onClick={handleClaim}>
+                    Claim Rewards
+                  </Button>
                 </div>
+                {stakingTxMessage && <div className="text-sm text-yellow-200">{stakingTxMessage}</div>}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="holdings" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {portfolioData.map((holding, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-white text-lg">{holding.name}</CardTitle>
-                          <CardDescription className="text-gray-400">{holding.industry}</CardDescription>
-                        </div>
-                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                          {holding.tokens.toLocaleString()} tokens
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400">Current Value</span>
-                          <span className="text-white font-semibold">{formatCurrency(holding.value)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400">24h Change</span>
-                          <span className={`font-semibold ${getChangeColor(holding.change)}`}>
-                            {holding.change > 0 ? "+" : ""}
-                            {holding.change.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="pt-4 border-t border-white/10">
-                          <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="text-yellow-300 font-futuristic flex items-center gap-2">
+                    <Rocket className="h-5 w-5" />
+                    Invest Snapshot
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                    <span className="text-white/70">Your Total Pool Shares</span>
+                    <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{toEth(totalShares)}</Badge>
+                  </div>
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                    <span className="text-white/70">Total On-Chain Pool Assets</span>
+                    <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{toEth(totalPoolAssets, 2)} BNB</Badge>
+                  </div>
+                  <Button className="w-full bg-yellow-400 text-black hover:bg-yellow-300" asChild>
+                    <Link href="/invest">Open Invest</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="text-yellow-300 font-futuristic flex items-center gap-2">
+                    <Store className="h-5 w-5" />
+                    Marketplace Snapshot
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                    <span className="text-white/70">Registered Pools</span>
+                    <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{poolCount}</Badge>
+                  </div>
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                    <span className="text-white/70">Treasury (Wallet view)</span>
+                    <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{toEth(walletBNB, 2)} BNB</Badge>
+                  </div>
+                  <Button className="w-full bg-yellow-400 text-black hover:bg-yellow-300" asChild>
+                    <Link href="/marketplace">Open Marketplace</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="text-yellow-300 font-futuristic flex items-center gap-2">
+                    <Gavel className="h-5 w-5" />
+                    DAO Snapshot
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                    <span className="text-white/70">Total Proposals</span>
+                    <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{proposalCount.toString()}</Badge>
+                  </div>
+                  <div className="rounded-xl border border-yellow-400/30 p-3">
+                    <div className="text-white/70 mb-2">Recent Proposal IDs</div>
+                    <div className="flex flex-wrap gap-2">
+                      {recentProposalIds.length > 0 ? (
+                        recentProposalIds.map((id) => (
+                          <Badge key={id} className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">#{id}</Badge>
+                        ))
+                      ) : (
+                        <span className="text-white/50">No proposals</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button className="w-full bg-yellow-400 text-black hover:bg-yellow-300" asChild>
+                    <Link href="/dao">Open DAO</Link>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
-          </TabsContent>
 
-          <TabsContent value="performance" className="space-y-6">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+            <Card className="glass-card">
               <CardHeader>
-                <CardTitle className="text-white">Performance Analytics</CardTitle>
-                <CardDescription className="text-gray-400">Detailed performance metrics and trends</CardDescription>
+                <CardTitle className="text-yellow-300 font-futuristic flex items-center gap-2">
+                  <Layers className="h-5 w-5" />
+                  Pool Holdings
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="month" stroke="#9CA3AF" />
-                    <YAxis stroke="#9CA3AF" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1F2937",
-                        border: "1px solid #374151",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} name="Portfolio Value" />
-                    <Line type="monotone" dataKey="invested" stroke="#8B5CF6" strokeWidth={3} name="Total Invested" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="activity" className="space-y-6">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white">Recent Activity</CardTitle>
-                <CardDescription className="text-gray-400">Your latest transactions and interactions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                          {activity.icon}
-                        </div>
-                        <div>
-                          <h3 className="text-white font-semibold capitalize">{activity.type}</h3>
-                          <p className="text-gray-400 text-sm">{activity.startup}</p>
-                        </div>
+              <CardContent className="space-y-3">
+                {holdings.length === 0 ? (
+                  <div className="text-white/70">No pool share positions found for this wallet.</div>
+                ) : (
+                  holdings.map((item) => (
+                    <div key={item.pool} className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-white">{item.name}</div>
+                        <div className="text-xs text-white/60 break-all">{item.pool}</div>
                       </div>
                       <div className="text-right">
-                        {activity.amount > 0 && (
-                          <p className="text-white font-semibold">{formatCurrency(activity.amount)}</p>
-                        )}
-                        <p className="text-gray-400 text-sm">{activity.date}</p>
+                        <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300 mb-1">{item.symbol}</Badge>
+                        <div className="text-yellow-300 font-semibold">{toEth(item.shares)} shares</div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+
+            <div className="mt-4 text-xs text-white/50 flex items-center gap-2">
+              <Landmark className="h-3.5 w-3.5" />
+              Data source: BSC Testnet smart contracts only (no random/mock data).
+            </div>
+
+            <div className="mt-4 text-xs text-white/50 flex items-center gap-2">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Integrated sections: Invest + Marketplace + DAO are summarized in this portfolio view.
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

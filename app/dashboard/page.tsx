@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, BarChart3, Brain, Coins, Gavel, PieChart, Rocket } from "lucide-react"
 import Navigation from "@/components/navigation"
 import AnimatedBackground from "@/components/animated-background"
+import { ABIS, CONTRACTS, getContract, getReadProvider, toEth } from "@/lib/onchain"
+import LiveMarketsPanel from "@/components/live-markets-panel"
 
 const dashboardLinks = [
   {
@@ -43,6 +46,36 @@ const dashboardLinks = [
 ]
 
 export default function DashboardPage() {
+  const [loading, setLoading] = useState(true)
+  const [pools, setPools] = useState(0)
+  const [supply, setSupply] = useState<bigint>(0n)
+  const [treasury, setTreasury] = useState<bigint>(0n)
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const provider = getReadProvider()
+        const token = getContract(CONTRACTS.defaianceToken, ABIS.erc20, provider)
+        const factory = getContract(CONTRACTS.startupPoolFactory, ABIS.poolFactory, provider)
+
+        const [count, totalSupply, treasuryBalance] = await Promise.all([
+          factory.poolsCount(),
+          token.totalSupply(),
+          provider.getBalance(CONTRACTS.treasuryVault),
+        ])
+
+        setPools(Number(count))
+        setSupply(totalSupply)
+        setTreasury(treasuryBalance)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+  }, [])
+
   return (
     <div className="min-h-screen bg-black text-yellow-400">
       <AnimatedBackground />
@@ -62,6 +95,29 @@ export default function DashboardPage() {
             portfolio tracking in one place.
           </p>
         </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card className="glass-card border-yellow-400/40">
+            <CardContent className="p-4">
+              <div className="text-white/70 text-sm">Investment Pools</div>
+              <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : pools}</div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-yellow-400/40">
+            <CardContent className="p-4">
+              <div className="text-white/70 text-sm">DFAI Supply</div>
+              <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : toEth(supply, 2)}</div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-yellow-400/40">
+            <CardContent className="p-4">
+              <div className="text-white/70 text-sm">Treasury BNB</div>
+              <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : toEth(treasury, 3)}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <LiveMarketsPanel />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

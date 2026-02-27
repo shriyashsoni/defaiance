@@ -5,17 +5,17 @@
 @layer base {
   :root {
     --background: 0 0% 0%;
-    --foreground: 48 96% 53%;
+    --foreground: 0 0% 100%;
     --card: 0 0% 0%;
-    --card-foreground: 48 96% 53%;
+    --card-foreground: 0 0% 100%;
     --popover: 0 0% 0%;
-    --popover-foreground: 48 96% 53%;
+    --popover-foreground: 0 0% 100%;
     --primary: 48 96% 53%;
     --primary-foreground: 0 0% 0%;
     --secondary: 0 0% 6%;
-    --secondary-foreground: 48 96% 53%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 8%;
-    --muted-foreground: 48 70% 60%;
+    --muted-foreground: 0 0% 72%;
     --accent: 48 96% 53%;
     --accent-foreground: 0 0% 0%;
     --destructive: 48 96% 53%;
@@ -35,49 +35,8 @@
   body {
     @apply font-sans;
     background-color: #000000;
-    color: #facc15;
+    color: #ffffff;
     font-feature-settings: "rlig" 1, "calt" 1;
-  }
-
-  html,
-  body,
-  main,
-  nav,
-  section,
-  article,
-  aside,
-  header,
-  footer,
-  div,
-  button,
-  input,
-  textarea,
-  select {
-    background-color: #000000;
-    color: #facc15;
-    border-color: #facc15;
-  }
-
-  * {
-    color: #facc15;
-    border-color: #facc15;
-    scrollbar-color: #facc15 #000000;
-    --tw-ring-color: #facc15;
-    --tw-shadow-color: #facc15;
-    --tw-gradient-from: #facc15;
-    --tw-gradient-to: rgb(250 204 21 / 0);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-  }
-
-  svg,
-  path,
-  circle,
-  rect,
-  line,
-  polygon,
-  polyline {
-    stroke: #facc15;
-    fill: #facc15;
   }
 
   h1,
@@ -92,19 +51,19 @@
 
 @layer components {
   .glass-card {
-      @apply backdrop-blur-xl border rounded-2xl;
-      background: rgba(0, 0, 0, 0.9);
-      border-color: #facc15;
-      box-shadow: 0 8px 32px rgba(250, 204, 21, 0.35);
+  @apply backdrop-blur-xl border rounded-2xl;
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(250, 204, 21, 0.65);
+  box-shadow: 0 8px 32px rgba(250, 204, 21, 0.22);
   }
 
   .neon-glow {
     @apply transition-all duration-300;
-      filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.7));
+    filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.7));
   }
 
   .neon-glow:hover {
-      filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.95));
+    filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.95));
   }
 
   .gradient-text {
@@ -128,6 +87,16 @@
     font-family: "Courier New", monospace;
     font-weight: 600;
     letter-spacing: 0.05em;
+  }
+}
+
+@layer utilities {
+  .theme-yellow {
+    color: #facc15 !important;
+  }
+
+  .theme-white {
+    color: #ffffff !important;
   }
 }
 

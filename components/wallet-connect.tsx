@@ -210,33 +210,33 @@ export default function WalletConnect() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+          <Button variant="outline" className="border-yellow-400/50 text-white hover:bg-yellow-400/10">
             <Wallet className="mr-2 h-4 w-4" />
             {address.slice(0, 6)}...{address.slice(-4)}
             <ChevronDown className="ml-2 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-slate-800 border-white/20">
+        <DropdownMenuContent className="bg-black border-yellow-400/50">
           <div className="p-2">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Network:</span>
-              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">{network}</Badge>
+              <span className="text-sm text-white/70">Network:</span>
+              <Badge className="bg-yellow-400/20 text-yellow-300 border-yellow-400/30">{network}</Badge>
             </div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Balance:</span>
+              <span className="text-sm text-white/70">Balance:</span>
               <span className="text-sm text-white font-mono">
                 {nativeBalance} {nativeSymbol}
               </span>
             </div>
-            <div className="text-xs text-gray-500 mb-3">{address}</div>
+            <div className="text-xs text-white/60 mb-3">{address}</div>
           </div>
-          <DropdownMenuItem onClick={switchToEthereum} className="text-white hover:bg-white/10">
+          <DropdownMenuItem onClick={switchToEthereum} className="text-white hover:bg-yellow-400/10">
             Switch to Ethereum
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={switchToBSC} className="text-white hover:bg-white/10">
+          <DropdownMenuItem onClick={switchToBSC} className="text-white hover:bg-yellow-400/10">
             Switch to BSC
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={disconnect} className="text-red-400 hover:bg-red-500/10">
+          <DropdownMenuItem onClick={disconnect} className="text-yellow-300 hover:bg-yellow-400/10">
             Disconnect
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -248,7 +248,7 @@ export default function WalletConnect() {
     <Button
       onClick={connectWallet}
       disabled={isLoading}
-      className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0"
+      className="bg-yellow-400 hover:bg-yellow-300 text-black border-0"
     >
       <Wallet className="mr-2 h-4 w-4" />
       {isLoading ? "Connecting..." : "Connect Wallet"}
