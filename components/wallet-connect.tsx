@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Wallet, ChevronDown } from "lucide-react"
@@ -13,6 +14,7 @@ declare global {
 }
 
 export default function WalletConnect() {
+  const router = useRouter()
   const [isConnected, setIsConnected] = useState(false)
   const [address, setAddress] = useState("")
   const [network, setNetwork] = useState("")
@@ -133,6 +135,7 @@ export default function WalletConnect() {
         const currentChainId = await getNetwork()
         setChainId(currentChainId)
         await fetchBalance(accounts[0])
+        router.push("/dashboard")
       }
     } catch (error) {
       console.error("User rejected request:", error)

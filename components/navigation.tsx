@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -10,19 +10,48 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import WalletConnect from "@/components/wallet-connect"
 
+declare global {
+  interface Window {
+    ethereum?: any
+  }
+}
+
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isWalletConnected, setIsWalletConnected] = useState(false)
   const pathname = usePathname()
 
-  const navItems = [
-    { name: "Platform", href: "/" },
-    { name: "Marketplace", href: "/marketplace" },
-    { name: "Portfolio", href: "/portfolio" },
-    { name: "AI Analytics", href: "/ai-analytics" },
-    { name: "DAO", href: "/dao" },
-    { name: "Academy", href: "/academy" },
-    { name: "Resources", href: "/resources" },
-  ]
+  useEffect(() => {
+    const syncConnection = async () => {
+      if (typeof window.ethereum === "undefined") {
+        setIsWalletConnected(false)
+        return
+      }
+
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_accounts" })
+        setIsWalletConnected(Array.isArray(accounts) && accounts.length > 0)
+      } catch {
+        setIsWalletConnected(false)
+      }
+    }
+
+    syncConnection()
+
+    if (typeof window.ethereum !== "undefined") {
+      const handleAccountsChanged = (accounts: string[]) => {
+        setIsWalletConnected(Array.isArray(accounts) && accounts.length > 0)
+      }
+
+      window.ethereum.on?.("accountsChanged", handleAccountsChanged)
+
+      return () => {
+        window.ethereum.removeListener?.("accountsChanged", handleAccountsChanged)
+      }
+    }
+  }, [])
+
+  const navItems = isWalletConnected ? [{ name: "Dashboard", href: "/dashboard" }] : []
 
   const isActive = (href: string) => {
     if (href === "/" && pathname === "/") return true
@@ -41,14 +70,14 @@ export default function Navigation() {
         >
           <Link href="/" className="flex items-center space-x-3">
             <Image src="/logo.png" alt="DEFAIANCE" width={50} height={50} className="rounded-full" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
               DEFAIANCE
             </span>
           </Link>
         </motion.div>
 
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center space-x-8">
+        <div className="hidden lg:flex items-center space-x-6">
           {navItems.map((item, index) => (
             <motion.div
               key={item.name}
@@ -59,13 +88,13 @@ export default function Navigation() {
               <Link
                 href={item.href}
                 className={`relative px-3 py-2 transition-colors duration-300 ${
-                  isActive(item.href) ? "text-blue-400" : "text-white hover:text-blue-400"
+                  isActive(item.href) ? "text-yellow-400" : "text-white hover:text-yellow-400"
                 }`}
               >
                 {item.name}
                 {isActive(item.href) && (
                   <motion.div
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-200"
                     layoutId="activeTab"
                     initial={false}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -80,29 +109,31 @@ export default function Navigation() {
           <WalletConnect />
 
           {/* Mobile Menu */}
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden text-white">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="bg-slate-900 border-white/10">
-              <div className="flex flex-col space-y-6 mt-8">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`text-lg transition-colors duration-300 ${
-                      isActive(item.href) ? "text-blue-400" : "text-white hover:text-blue-400"
-                    }`}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
+          {navItems.length > 0 && (
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden text-white">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-slate-900 border-white/10">
+                <div className="flex flex-col space-y-6 mt-8">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`text-lg transition-colors duration-300 ${
+                        isActive(item.href) ? "text-yellow-400" : "text-white hover:text-yellow-400"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </div>
     </nav>

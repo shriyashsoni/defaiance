@@ -1,4 +1,5 @@
 "use client"
+import { useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,16 +24,40 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import Navigation from "@/components/navigation"
 import AnimatedBackground from "@/components/animated-background"
 import StatsCounter from "@/components/stats-counter"
 import StartupCard from "@/components/startup-card"
 import FloatingElements from "@/components/floating-elements"
 
+declare global {
+  interface Window {
+    ethereum?: any
+  }
+}
+
 export default function DefaianceLanding() {
+  const router = useRouter()
   const { scrollYProgress } = useScroll()
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+
+  useEffect(() => {
+    const redirectIfConnected = async () => {
+      if (typeof window.ethereum === "undefined") return
+
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_accounts" })
+        if (Array.isArray(accounts) && accounts.length > 0) {
+          router.replace("/dashboard")
+        }
+      } catch {
+      }
+    }
+
+    redirectIfConnected()
+  }, [router])
 
   const stats = [
     { label: "Total Capital Raised", value: 125000000, prefix: "$", suffix: "" },
@@ -72,17 +97,23 @@ export default function DefaianceLanding() {
       icon: <Globe className="h-8 w-8" />,
       title: "Cross-Chain Support",
       description: "Interoperable across Ethereum, Polygon, Solana, Arbitrum, and Binance Smart Chain.",
-      link: "/documentation",
+      link: "/portfolio",
     },
     {
       icon: <Lock className="h-8 w-8" />,
       title: "Vault Protection",
       description: "Milestone-based fund release system ensures accountability and investor protection.",
-      link: "/resources",
+      link: "/invest",
     },
   ]
 
   const quickLinks = [
+    {
+      icon: <Rocket className="h-6 w-6" />,
+      title: "Dashboard",
+      description: "One place for all platform tools",
+      link: "/dashboard",
+    },
     {
       icon: <BarChart3 className="h-6 w-6" />,
       title: "Marketplace",
@@ -102,13 +133,8 @@ export default function DefaianceLanding() {
       link: "/ai-analytics",
     },
     { icon: <Gavel className="h-6 w-6" />, title: "DAO Governance", description: "Vote on proposals", link: "/dao" },
-    { icon: <BookOpen className="h-6 w-6" />, title: "Academy", description: "Learn Web3 investing", link: "/academy" },
-    {
-      icon: <FileText className="h-6 w-6" />,
-      title: "Resources",
-      description: "Documentation & guides",
-      link: "/resources",
-    },
+    { icon: <BookOpen className="h-6 w-6" />, title: "Invest", description: "Fund startup rounds", link: "/invest" },
+    { icon: <FileText className="h-6 w-6" />, title: "On-chain Portfolio", description: "Review token positions", link: "/portfolio" },
   ]
 
   const startups = [
@@ -223,6 +249,12 @@ export default function DefaianceLanding() {
               The decentralized investment platform that democratizes startup funding through Web3 technologies, DeFi
               infrastructure, and AI-driven analytics.
             </motion.p>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Badge className="glass-card border-yellow-400/40 text-yellow-300 px-4 py-2">BSC Smart Contracts Live</Badge>
+              <Badge className="glass-card border-yellow-400/40 text-yellow-300 px-4 py-2">Wallet-First Dashboard</Badge>
+              <Badge className="glass-card border-yellow-400/40 text-yellow-300 px-4 py-2">AI + DAO Integrated</Badge>
+            </div>
           </motion.div>
 
           <motion.div
@@ -231,6 +263,14 @@ export default function DefaianceLanding() {
             transition={{ duration: 0.8, delay: 0.9 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
           >
+            <Link href="/dashboard">
+              <Button
+                size="lg"
+                className="bg-yellow-400 text-black hover:bg-yellow-300 transition-all duration-300 px-8 py-4 text-lg font-mono font-futuristic"
+              >
+                Open Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
             <Link href="/invest">
               <Button
                 size="lg"
@@ -239,13 +279,13 @@ export default function DefaianceLanding() {
                 Start Investing <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/dao">
+            <Link href="/marketplace">
               <Button
                 size="lg"
                 variant="outline"
                 className="glass-card hover:scale-105 transition-all duration-300 px-8 py-4 text-lg font-mono font-futuristic border-white/20 text-white hover:bg-white/10"
               >
-                Join DAO <Users className="ml-2 h-5 w-5" />
+                Browse Marketplace <Users className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </motion.div>
