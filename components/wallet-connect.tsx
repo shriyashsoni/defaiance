@@ -16,11 +16,49 @@ export default function WalletConnect() {
   const [isConnected, setIsConnected] = useState(false)
   const [address, setAddress] = useState("")
   const [network, setNetwork] = useState("")
+  const [chainId, setChainId] = useState("")
+  const [nativeBalance, setNativeBalance] = useState("0.0000")
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     checkConnection()
+
+    if (typeof window.ethereum !== "undefined") {
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (!accounts.length) {
+          disconnect()
+          return
+        }
+
+        setIsConnected(true)
+        setAddress(accounts[0])
+      }
+
+      const handleChainChanged = (nextChainId: string) => {
+        setChainId(nextChainId)
+        getNetwork(nextChainId)
+      }
+
+      window.ethereum.on?.("accountsChanged", handleAccountsChanged)
+      window.ethereum.on?.("chainChanged", handleChainChanged)
+
+      return () => {
+        window.ethereum.removeListener?.("accountsChanged", handleAccountsChanged)
+        window.ethereum.removeListener?.("chainChanged", handleChainChanged)
+      }
+    }
   }, [])
+
+  useEffect(() => {
+    if (!isConnected || !address) return
+
+    fetchBalance()
+    const interval = window.setInterval(() => {
+      fetchBalance()
+    }, 15000)
+
+    return () => window.clearInterval(interval)
+  }, [isConnected, address, chainId])
 
   const checkConnection = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -29,7 +67,9 @@ export default function WalletConnect() {
         if (accounts.length > 0) {
           setIsConnected(true)
           setAddress(accounts[0])
-          await getNetwork()
+          const currentChainId = await getNetwork()
+          setChainId(currentChainId)
+          await fetchBalance(accounts[0])
         }
       } catch (error) {
         console.error("Error checking connection:", error)
@@ -37,18 +77,42 @@ export default function WalletConnect() {
     }
   }
 
-  const getNetwork = async () => {
+  const getNetwork = async (providedChainId?: string) => {
     try {
-      const chainId = await window.ethereum.request({ method: "eth_chainId" })
+      const currentChainId = providedChainId || (await window.ethereum.request({ method: "eth_chainId" }))
       const networks: { [key: string]: string } = {
         "0x1": "Ethereum",
         "0x38": "BSC",
+        "0x61": "BSC Testnet",
         "0x89": "Polygon",
         "0xa4b1": "Arbitrum",
       }
-      setNetwork(networks[chainId] || "Unknown")
+      setNetwork(networks[currentChainId] || "Unknown")
+      return currentChainId
     } catch (error) {
       console.error("Error getting network:", error)
+      return ""
+    }
+  }
+
+  const fetchBalance = async (walletAddress?: string) => {
+    if (typeof window.ethereum === "undefined") return
+
+    const targetAddress = walletAddress || address
+    if (!targetAddress) return
+
+    try {
+      const hexBalance = await window.ethereum.request({
+        method: "eth_getBalance",
+        params: [targetAddress, "latest"],
+      })
+
+      const wei = BigInt(hexBalance)
+      const whole = wei / 10n ** 18n
+      const fraction = ((wei % 10n ** 18n) * 10000n) / 10n ** 18n
+      setNativeBalance(`${whole.toString()}.${fraction.toString().padStart(4, "0")}`)
+    } catch (error) {
+      console.error("Error getting wallet balance:", error)
     }
   }
 
@@ -66,7 +130,9 @@ export default function WalletConnect() {
       if (accounts.length > 0) {
         setIsConnected(true)
         setAddress(accounts[0])
-        await getNetwork()
+        const currentChainId = await getNetwork()
+        setChainId(currentChainId)
+        await fetchBalance(accounts[0])
       }
     } catch (error) {
       console.error("User rejected request:", error)
@@ -81,7 +147,9 @@ export default function WalletConnect() {
         method: "wallet_switchEthereumChain",
         params: [{ chainId: "0x38" }],
       })
-      await getNetwork()
+      const currentChainId = await getNetwork("0x38")
+      setChainId(currentChainId)
+      await fetchBalance()
     } catch (switchError: any) {
       if (switchError.code === 4902) {
         try {
@@ -101,7 +169,9 @@ export default function WalletConnect() {
               },
             ],
           })
-          await getNetwork()
+          const currentChainId = await getNetwork("0x38")
+          setChainId(currentChainId)
+          await fetchBalance()
         } catch (addError) {
           console.error("Error adding BSC network:", addError)
         }
@@ -115,7 +185,9 @@ export default function WalletConnect() {
         method: "wallet_switchEthereumChain",
         params: [{ chainId: "0x1" }],
       })
-      await getNetwork()
+      const currentChainId = await getNetwork("0x1")
+      setChainId(currentChainId)
+      await fetchBalance()
     } catch (error) {
       console.error("Error switching to Ethereum:", error)
     }
@@ -125,7 +197,11 @@ export default function WalletConnect() {
     setIsConnected(false)
     setAddress("")
     setNetwork("")
+    setChainId("")
+    setNativeBalance("0.0000")
   }
+
+  const nativeSymbol = chainId === "0x38" || chainId === "0x61" ? "BNB" : "ETH"
 
   if (isConnected) {
     return (
@@ -142,6 +218,12 @@ export default function WalletConnect() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-400">Network:</span>
               <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">{network}</Badge>
+            </div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Balance:</span>
+              <span className="text-sm text-white font-mono">
+                {nativeBalance} {nativeSymbol}
+              </span>
             </div>
             <div className="text-xs text-gray-500 mb-3">{address}</div>
           </div>

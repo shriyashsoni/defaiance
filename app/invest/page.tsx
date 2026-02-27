@@ -217,7 +217,7 @@ export default function InvestPage() {
           </p>
         </motion.div>
 
-        {/* Market Stats */}
+        {/* Investment Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

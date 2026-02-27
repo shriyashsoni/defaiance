@@ -91,3 +91,5 @@ MIT License
 ----
 🧠 Built for the decentralized future.
 Made with 💙 by the DEFAIANCE Team.
+
+----
