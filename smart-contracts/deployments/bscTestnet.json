@@ -1,0 +1,17 @@
+{
+  "network": "bscTestnet",
+  "chainId": 97,
+  "deployedAt": "2026-02-27",
+  "deployer": "0x97d641886d8577925F1ea6c8864e0B7ceaB7aBF8",
+  "contracts": {
+    "DefaianceToken": "0x2723a914EA141bf0fBEa66Dd74e52420B372eddA",
+    "TreasuryVault": "0x64554e024f0528F413134A7E15d64FE356B01045",
+    "StartupPoolFactory": "0xd5222f4a8d111913d7A57F9AE0C251F128Bd8050",
+    "MarketplaceEscrow": "0x3468b7eb5F42f5d409194028daA48EDDBC9Df4F1",
+    "OracleAdapter": "0xbE3Eee190a1FF8433F0082D965A60092D3F6433d",
+    "DefaianceDAO": "0xF541363aF639D19dB8d5a136b87d166Ce1fC1fbA",
+    "StakingRewards": "0x33239306014423E21e2E37f1fA495C57a290d13a",
+    "TokenVesting": "0xEeda9e7BA71d5383849cC849c150e751323FDb4D"
+  },
+  "explorerBase": "https://testnet.bscscan.com/address"
+}

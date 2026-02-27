@@ -1,0 +1,21 @@
+{
+  "name": "defaiance-smart-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "clean": "hardhat clean",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:bscTestnet": "hardhat run scripts/deploy.ts --network bscTestnet",
+    "deploy:bscMainnet": "hardhat run scripts/deploy.ts --network bscMainnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.1.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.24.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}

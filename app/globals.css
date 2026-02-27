@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 210 100% 6%;
-    --foreground: 0 0% 100%;
-    --card: 210 100% 8%;
-    --card-foreground: 0 0% 100%;
-    --popover: 210 100% 8%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 15%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 210 40% 15%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 210 40% 20%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 215 27% 20%;
-    --input: 215 27% 20%;
-    --ring: 217 91% 60%;
+    --background: 0 0% 0%;
+    --foreground: 48 96% 53%;
+    --card: 0 0% 0%;
+    --card-foreground: 48 96% 53%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 48 96% 53%;
+    --primary: 48 96% 53%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 48 96% 53%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 48 70% 60%;
+    --accent: 48 96% 53%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 48 96% 53%;
+    --destructive-foreground: 0 0% 0%;
+    --border: 48 96% 53%;
+    --input: 0 0% 6%;
+    --ring: 48 96% 53%;
     --radius: 0.75rem;
   }
 }
@@ -34,9 +34,50 @@
 
   body {
     @apply font-sans;
-    background-color: #0a0f2c;
-    color: white;
+    background-color: #000000;
+    color: #facc15;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html,
+  body,
+  main,
+  nav,
+  section,
+  article,
+  aside,
+  header,
+  footer,
+  div,
+  button,
+  input,
+  textarea,
+  select {
+    background-color: #000000;
+    color: #facc15;
+    border-color: #facc15;
+  }
+
+  * {
+    color: #facc15;
+    border-color: #facc15;
+    scrollbar-color: #facc15 #000000;
+    --tw-ring-color: #facc15;
+    --tw-shadow-color: #facc15;
+    --tw-gradient-from: #facc15;
+    --tw-gradient-to: rgb(250 204 21 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  svg,
+  path,
+  circle,
+  rect,
+  line,
+  polygon,
+  polyline {
+    stroke: #facc15;
+    fill: #facc15;
   }
 
   h1,
@@ -51,21 +92,23 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      @apply backdrop-blur-xl border rounded-2xl;
+      background: rgba(0, 0, 0, 0.9);
+      border-color: #facc15;
+      box-shadow: 0 8px 32px rgba(250, 204, 21, 0.35);
   }
 
   .neon-glow {
     @apply transition-all duration-300;
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+      filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.7));
   }
 
   .neon-glow:hover {
-    filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8));
+      filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.95));
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent;
+      @apply bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent;
   }
 
   .animated-underline {
@@ -74,7 +117,7 @@
 
   .animated-underline::after {
     content: "";
-    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 transition-all duration-300;
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-300 transition-all duration-300;
   }
 
   .animated-underline:hover::after {
@@ -94,14 +137,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(250, 204, 21, 0.7);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.8);
+  background: rgba(250, 204, 21, 1);
 }
