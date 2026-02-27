@@ -46,11 +46,66 @@ type RawResponse = {
 
 const sections = ["us", "europe", "asia", "currencies", "crypto", "futures"] as const
 
+async function getBinanceFallbackMarkets() {
+  const symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"]
+  const endpoint = new URL("https://api.binance.com/api/v3/ticker/24hr")
+  endpoint.searchParams.set("symbols", JSON.stringify(symbols))
+
+  const response = await fetch(endpoint.toString(), { cache: "no-store" })
+  if (!response.ok) {
+    throw new Error("Fallback provider unavailable")
+  }
+
+  const rows = ((await response.json()) as Array<{ symbol: string; lastPrice: string; priceChangePercent: string }>).map(
+    (item) => {
+      const pct = Number(item.priceChangePercent)
+      const price = Number(item.lastPrice)
+      return {
+        stock: item.symbol,
+        name: item.symbol,
+        price,
+        extracted_price: price,
+        price_movement: {
+          percentage: pct,
+          movement: pct >= 0 ? "Up" : "Down",
+        },
+      }
+    },
+  )
+
+  return {
+    status: "Fallback",
+    provider: "Binance (Fallback)",
+    updatedAt: new Date().toISOString(),
+    markets: {
+      us: [],
+      europe: [],
+      asia: [],
+      currencies: [],
+      crypto: rows,
+      futures: [],
+    },
+    marketTrends: [],
+    topNews: null,
+    newsResults: [],
+    discoverMore: [],
+  }
+}
+
 export async function GET() {
   const apiKey = process.env.SERPAPI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MARKET_ANALYTICS_API_KEY
 
   if (!apiKey) {
-    return NextResponse.json({ error: "Missing SERPAPI_API_KEY" }, { status: 500 })
+    try {
+      const fallback = await getBinanceFallbackMarkets()
+      return NextResponse.json(fallback, {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      })
+    } catch {
+      return NextResponse.json({ error: "Missing SERPAPI_API_KEY and fallback unavailable" }, { status: 500 })
+    }
   }
 
   try {
@@ -94,12 +149,21 @@ export async function GET() {
       },
     )
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Unexpected market api error",
-        details: error instanceof Error ? error.message : "Unknown",
-      },
-      { status: 500 },
-    )
+    try {
+      const fallback = await getBinanceFallbackMarkets()
+      return NextResponse.json(fallback, {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      })
+    } catch {
+      return NextResponse.json(
+        {
+          error: "Unexpected market api error",
+          details: error instanceof Error ? error.message : "Unknown",
+        },
+        { status: 500 },
+      )
+    }
   }
 }
