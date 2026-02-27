@@ -2,62 +2,111 @@ import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
-type RawMarketRow = {
-  stock?: string
+type BinanceTicker = {
+  symbol: string
+  lastPrice: string
+  priceChangePercent: string
+}
+
+type MarketRow = {
+  stock: string
   name?: string
-  price?: number
-  extracted_price?: number
+  price: number
+  extracted_price: number
   price_movement?: {
-    percentage?: number
-    value?: number
+    percentage: number
     movement?: string
   }
 }
 
-type RawSerpApiResponse = {
-  search_metadata?: {
-    status?: string
-    processed_at?: string
-  }
-  markets?: Record<string, RawMarketRow[]>
+const sections: Record<string, string[]> = {
+  crypto: ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"],
+  bnb: ["BNBUSDT", "BNBBTC", "BNBETH", "BNBUSDC", "BNBFDUSD", "BNBEUR"],
+  defi: ["UNIUSDT", "AAVEUSDT", "LINKUSDT", "SUSHIUSDT", "MKRUSDT", "SNXUSDT"],
+  layer2: ["OPUSDT", "ARBUSDT", "MATICUSDT", "IMXUSDT", "METISUSDT", "LRCUSDT"],
 }
 
-const sections = ["us", "europe", "asia", "currencies", "crypto", "futures"] as const
+const nameMap: Record<string, string> = {
+  BTCUSDT: "Bitcoin / Tether",
+  ETHUSDT: "Ethereum / Tether",
+  BNBUSDT: "BNB / Tether",
+  SOLUSDT: "Solana / Tether",
+  XRPUSDT: "XRP / Tether",
+  DOGEUSDT: "Dogecoin / Tether",
+  BNBBTC: "BNB / Bitcoin",
+  BNBETH: "BNB / Ethereum",
+  BNBUSDC: "BNB / USDC",
+  BNBFDUSD: "BNB / FDUSD",
+  BNBEUR: "BNB / EUR",
+  UNIUSDT: "Uniswap / Tether",
+  AAVEUSDT: "Aave / Tether",
+  LINKUSDT: "Chainlink / Tether",
+  SUSHIUSDT: "Sushi / Tether",
+  MKRUSDT: "Maker / Tether",
+  SNXUSDT: "Synthetix / Tether",
+  OPUSDT: "Optimism / Tether",
+  ARBUSDT: "Arbitrum / Tether",
+  MATICUSDT: "Polygon / Tether",
+  IMXUSDT: "Immutable / Tether",
+  METISUSDT: "Metis / Tether",
+  LRCUSDT: "Loopring / Tether",
+}
 
 export async function GET() {
-  const apiKey = process.env.SERPAPI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MARKET_ANALYTICS_API_KEY
+  const apiKey = process.env.BINANCE_API_KEY
 
-  if (!apiKey) {
-    return NextResponse.json({ error: "Missing SERPAPI_API_KEY" }, { status: 500 })
-  }
+  const allSymbols = Array.from(new Set(Object.values(sections).flat()))
 
   try {
-    const endpoint = new URL("https://serpapi.com/search.json")
-    endpoint.searchParams.set("engine", "google_finance_markets")
-    endpoint.searchParams.set("trend", "indexes")
-    endpoint.searchParams.set("hl", "en")
-    endpoint.searchParams.set("api_key", apiKey)
+    const endpoint = new URL("https://api.binance.com/api/v3/ticker/24hr")
+    endpoint.searchParams.set("symbols", JSON.stringify(allSymbols))
 
     const response = await fetch(endpoint.toString(), {
       method: "GET",
       cache: "no-store",
+      headers: apiKey
+        ? {
+            "X-MBX-APIKEY": apiKey,
+          }
+        : undefined,
     })
 
     if (!response.ok) {
       return NextResponse.json({ error: "Failed loading market feed" }, { status: response.status })
     }
 
-    const json = (await response.json()) as RawSerpApiResponse
+    const tickers = (await response.json()) as BinanceTicker[]
+    const bySymbol = new Map(tickers.map((item) => [item.symbol, item]))
 
-    const markets = sections.reduce<Record<string, RawMarketRow[]>>((acc, section) => {
-      acc[section] = (json.markets?.[section] || []).slice(0, 6)
+    const markets = Object.entries(sections).reduce<Record<string, MarketRow[]>>((acc, [section, symbols]) => {
+      acc[section] = symbols
+        .map((symbol) => {
+          const ticker = bySymbol.get(symbol)
+          if (!ticker) return null
+
+          const percentage = Number(ticker.priceChangePercent)
+          const price = Number(ticker.lastPrice)
+
+          return {
+            stock: ticker.symbol,
+            name: nameMap[ticker.symbol] || ticker.symbol,
+            price,
+            extracted_price: price,
+            price_movement: {
+              percentage,
+              movement: percentage >= 0 ? "up" : "down",
+            },
+          }
+        })
+        .filter(Boolean) as MarketRow[]
       return acc
     }, {})
 
     return NextResponse.json(
       {
-        status: json.search_metadata?.status || "Unknown",
-        updatedAt: json.search_metadata?.processed_at || new Date().toISOString(),
+        status: "Live",
+        provider: "Binance",
+        updatedAt: new Date().toISOString(),
         markets,
       },
       {

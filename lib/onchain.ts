@@ -5,7 +5,7 @@ export const CONTRACTS = {
   rpcUrl: process.env.NEXT_PUBLIC_BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545",
   defaianceToken: "0x2723a914EA141bf0fBEa66Dd74e52420B372eddA",
   treasuryVault: "0x64554e024f0528F413134A7E15d64FE356B01045",
-  startupPoolFactory: "0xd5222f4a8d111913d7A57F9AE0C251F128Bd8050",
+  startupPoolFactory: "0x5cd6085759F2a378FD227Be036126009FBaCBDCD",
   marketplaceEscrow: "0x3468b7eb5F42f5d409194028daA48EDDBC9Df4F1",
   oracleAdapter: "0xbE3Eee190a1FF8433F0082D965A60092D3F6433d",
   defaianceDAO: "0xF541363aF639D19dB8d5a136b87d166Ce1fC1fbA",
@@ -26,6 +26,7 @@ export const ABIS = {
     "function poolsCount() view returns (uint256)",
     "function allPools(uint256) view returns (address)",
     "function poolInfo(address) view returns (address pool,address asset,string name,string symbol)",
+    "function createPool(address asset,address manager,string name,string symbol) returns (address)",
   ],
   investmentPool: [
     "function poolName() view returns (string)",

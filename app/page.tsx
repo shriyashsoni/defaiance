@@ -19,6 +19,7 @@ import {
   TerminalSquare,
   BarChart3,
   Users,
+  ExternalLink,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -236,6 +237,22 @@ export default function DefaianceLanding() {
       <section className="py-8 relative">
         <div className="container mx-auto px-4">
           <LiveMarketsPanel />
+
+          <Card className="glass-card border-yellow-400/30 mt-6">
+            <CardHeader>
+              <CardTitle className="text-yellow-300 font-futuristic">Official Project Source</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <p className="text-white/70 text-sm">
+                Web3 learning projects showcased on DEFAIANCE are curated from the official BNB Chain Cookbook.
+              </p>
+              <a href="https://www.bnbchain.org/en/cookbook" target="_blank" rel="noreferrer">
+                <Button className="bg-yellow-400 text-black hover:bg-yellow-300">
+                  Open BNB Cookbook <ExternalLink className="h-4 w-4 ml-2" />
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
         </div>
       </section>
 

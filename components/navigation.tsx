@@ -78,6 +78,20 @@ export default function Navigation() {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center space-x-6">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Link
+              href="/submit-product"
+              className={`relative px-3 py-2 transition-colors duration-300 ${
+                isActive("/submit-product") ? "text-yellow-400" : "text-white hover:text-yellow-400"
+              }`}
+            >
+              Submit Product
+            </Link>
+          </motion.div>
           {navItems.map((item, index) => (
             <motion.div
               key={item.name}
@@ -118,6 +132,15 @@ export default function Navigation() {
               </SheetTrigger>
               <SheetContent side="right" className="bg-black border-yellow-400/30">
                 <div className="flex flex-col space-y-6 mt-8">
+                  <Link
+                    href="/submit-product"
+                    onClick={() => setIsOpen(false)}
+                    className={`text-lg transition-colors duration-300 ${
+                      isActive("/submit-product") ? "text-yellow-400" : "text-white hover:text-yellow-400"
+                    }`}
+                  >
+                    Submit Product
+                  </Link>
                   {navItems.map((item) => (
                     <Link
                       key={item.name}

@@ -81,6 +81,10 @@ export default function InvestPage() {
 
   const totalAssets = useMemo(() => pools.reduce((acc, pool) => acc + pool.accountedAssets, 0n), [pools])
   const totalMyShares = useMemo(() => pools.reduce((acc, pool) => acc + pool.myShares, 0n), [pools])
+  const totalRedeemableValue = useMemo(
+    () => pools.reduce((acc, pool) => acc + (pool.myShares * pool.pricePerShare) / 10n ** 18n, 0n),
+    [pools],
+  )
 
   const handleDeposit = async (pool: PoolView) => {
     const signer = await getWalletSigner()
@@ -188,6 +192,12 @@ export default function InvestPage() {
               <div className="text-3xl font-bold text-yellow-400">{account ? toEth(totalMyShares) : "Connect"}</div>
             </CardContent>
           </Card>
+          <Card className="glass-card md:col-span-3">
+            <CardContent className="p-5">
+              <div className="text-white/70 text-sm mb-1">Estimated Redeem Value (All Your Shares)</div>
+              <div className="text-3xl font-bold text-yellow-400">{account ? `${toEth(totalRedeemableValue)} BNB` : "Connect"}</div>
+            </CardContent>
+          </Card>
         </div>
 
         <LiveMarketsPanel />
@@ -237,6 +247,12 @@ export default function InvestPage() {
                     <div className="rounded-xl border border-yellow-400/30 p-3">
                       <div className="text-white/60">Your Shares</div>
                       <div className="text-yellow-300 font-semibold">{account ? toEth(pool.myShares) : "Connect"}</div>
+                    </div>
+                    <div className="rounded-xl border border-yellow-400/30 p-3 col-span-2">
+                      <div className="text-white/60">Estimated Redeem Value</div>
+                      <div className="text-yellow-300 font-semibold">
+                        {account ? `${toEth((pool.myShares * pool.pricePerShare) / 10n ** 18n)} BNB` : "Connect"}
+                      </div>
                     </div>
                   </div>
 

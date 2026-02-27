@@ -23,12 +23,10 @@ type MarketPayload = {
 }
 
 const sectionLabel: Record<string, string> = {
-  us: "US",
-  europe: "Europe",
-  asia: "Asia",
-  currencies: "FX",
-  crypto: "Crypto",
-  futures: "Futures",
+  crypto: "Crypto Majors",
+  bnb: "BNB Pairs",
+  defi: "DeFi",
+  layer2: "Layer 2",
 }
 
 function fmt(value?: number) {
@@ -71,7 +69,7 @@ export default function LiveMarketsPanel() {
     <Card className="glass-card mb-8">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle className="text-yellow-300 font-futuristic">Real-Time Google Markets</CardTitle>
+          <CardTitle className="text-yellow-300 font-futuristic">Real-Time Binance Markets</CardTitle>
           <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">
             {loading ? "Loading" : "Auto refresh 25s"}
           </Badge>

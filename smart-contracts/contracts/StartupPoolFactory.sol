@@ -30,7 +30,6 @@ contract StartupPoolFactory is AccessControl {
 
     function createPool(address asset, address manager, string calldata name, string calldata symbol)
         external
-        onlyRole(DEFAULT_ADMIN_ROLE)
         returns (address pool)
     {
         if (manager == address(0)) {
