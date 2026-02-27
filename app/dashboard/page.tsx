@@ -53,11 +53,50 @@ const dashboardLinks = [
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
+  const [walletChecked, setWalletChecked] = useState(false)
+  const [walletConnected, setWalletConnected] = useState(false)
   const [pools, setPools] = useState(0)
   const [supply, setSupply] = useState<bigint>(0n)
   const [treasury, setTreasury] = useState<bigint>(0n)
 
   useEffect(() => {
+    const syncWallet = async () => {
+      if (typeof window.ethereum === "undefined") {
+        setWalletConnected(false)
+        setWalletChecked(true)
+        return
+      }
+
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_accounts" })
+        setWalletConnected(Array.isArray(accounts) && accounts.length > 0)
+      } catch {
+        setWalletConnected(false)
+      } finally {
+        setWalletChecked(true)
+      }
+    }
+
+    syncWallet()
+
+    if (typeof window.ethereum !== "undefined") {
+      const onAccountsChanged = (accounts: string[]) => {
+        setWalletConnected(Array.isArray(accounts) && accounts.length > 0)
+      }
+
+      window.ethereum.on?.("accountsChanged", onAccountsChanged)
+      return () => {
+        window.ethereum.removeListener?.("accountsChanged", onAccountsChanged)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!walletChecked || !walletConnected) {
+      setLoading(false)
+      return
+    }
+
     const load = async () => {
       setLoading(true)
       try {
@@ -80,7 +119,7 @@ export default function DashboardPage() {
     }
 
     load()
-  }, [])
+  }, [walletChecked, walletConnected])
 
   return (
     <div className="min-h-screen bg-black text-yellow-400">
@@ -110,63 +149,84 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {walletChecked && !walletConnected ? (
           <Card className="glass-card border-yellow-400/40">
-            <CardContent className="p-4">
-              <div className="text-white/70 text-sm">Investment Pools</div>
-              <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : pools}</div>
+            <CardHeader>
+              <CardTitle className="font-mono text-yellow-300">Connect Wallet To View Dashboard</CardTitle>
+              <CardDescription className="text-yellow-200/75">
+                Use the Connect Wallet button in the header first. Once connected, dashboard metrics and modules will appear automatically.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/">
+                <Button className="bg-yellow-400 text-black hover:bg-yellow-300 font-semibold">
+                  Go Home
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
-          <Card className="glass-card border-yellow-400/40">
-            <CardContent className="p-4">
-              <div className="text-white/70 text-sm">DFAI Supply</div>
-              <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : toEth(supply, 2)}</div>
-            </CardContent>
-          </Card>
-          <Card className="glass-card border-yellow-400/40">
-            <CardContent className="p-4">
-              <div className="text-white/70 text-sm">Treasury BNB</div>
-              <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : toEth(treasury, 3)}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <LiveMarketsPanel />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {dashboardLinks.map((item, index) => (
-            <motion.div
-              key={item.href}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.12 + index * 0.06 }}
-            >
-              <Card className="glass-card h-full border-yellow-400/40 hover:border-yellow-300 transition-all">
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-yellow-300">{item.icon}</div>
-                    <BarChart3 className="h-5 w-5 text-yellow-400/80" />
-                  </div>
-                  <CardTitle className="font-mono text-yellow-300">{item.title}</CardTitle>
-                  <CardDescription className="text-yellow-200/75">{item.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Link href={item.href}>
-                    <Button className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-semibold">
-                      Open {item.title}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <Card className="glass-card border-yellow-400/40">
+                <CardContent className="p-4">
+                  <div className="text-white/70 text-sm">Investment Pools</div>
+                  <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : pools}</div>
                 </CardContent>
               </Card>
+              <Card className="glass-card border-yellow-400/40">
+                <CardContent className="p-4">
+                  <div className="text-white/70 text-sm">DFAI Supply</div>
+                  <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : toEth(supply, 2)}</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card border-yellow-400/40">
+                <CardContent className="p-4">
+                  <div className="text-white/70 text-sm">Treasury BNB</div>
+                  <div className="text-2xl font-bold text-yellow-300">{loading ? "..." : toEth(treasury, 3)}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <LiveMarketsPanel />
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {dashboardLinks.map((item, index) => (
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.12 + index * 0.06 }}
+                >
+                  <Card className="glass-card h-full border-yellow-400/40 hover:border-yellow-300 transition-all">
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-yellow-300">{item.icon}</div>
+                        <BarChart3 className="h-5 w-5 text-yellow-400/80" />
+                      </div>
+                      <CardTitle className="font-mono text-yellow-300">{item.title}</CardTitle>
+                      <CardDescription className="text-yellow-200/75">{item.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Link href={item.href}>
+                        <Button className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-semibold">
+                          Open {item.title}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </motion.div>
-          ))}
-        </motion.div>
+          </>
+        )}
       </div>
     </div>
   )
