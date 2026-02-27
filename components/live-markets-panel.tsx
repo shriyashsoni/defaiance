@@ -17,16 +17,19 @@ type MarketRow = {
 
 type MarketPayload = {
   status: string
+  provider?: string
   updatedAt: string
   markets: Record<string, MarketRow[]>
   error?: string
 }
 
 const sectionLabel: Record<string, string> = {
-  crypto: "Crypto Majors",
-  bnb: "BNB Pairs",
-  defi: "DeFi",
-  layer2: "Layer 2",
+  us: "US",
+  europe: "Europe",
+  asia: "Asia",
+  currencies: "Currencies",
+  crypto: "Crypto",
+  futures: "Futures",
 }
 
 function fmt(value?: number) {
@@ -69,13 +72,15 @@ export default function LiveMarketsPanel() {
     <Card className="glass-card mb-8">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle className="text-yellow-300 font-futuristic">Real-Time Binance Markets</CardTitle>
+          <CardTitle className="text-yellow-300 font-futuristic">Real-Time Global Markets</CardTitle>
           <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">
             {loading ? "Loading" : "Auto refresh 25s"}
           </Badge>
         </div>
         <p className="text-xs text-white/60">
-          {error ? error : `Status: ${data?.status || "-"} • Updated: ${data?.updatedAt || "-"}`}
+          {error
+            ? error
+            : `Provider: ${data?.provider || "-"} • Status: ${data?.status || "-"} • Updated: ${data?.updatedAt || "-"}`}
         </p>
       </CardHeader>
       <CardContent className="space-y-5">

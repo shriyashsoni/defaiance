@@ -181,6 +181,11 @@ export default function DefaianceLanding() {
                       Start Investing
                     </Button>
                   </Link>
+                  <Link href="/markets">
+                    <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10">
+                      Open Markets
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

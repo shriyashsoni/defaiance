@@ -43,6 +43,12 @@ const dashboardLinks = [
     href: "/dao",
     icon: <Gavel className="h-6 w-6" />,
   },
+  {
+    title: "Markets",
+    description: "Open full global market view with trends and news",
+    href: "/markets",
+    icon: <BarChart3 className="h-6 w-6" />,
+  },
 ]
 
 export default function DashboardPage() {
@@ -94,6 +100,14 @@ export default function DashboardPage() {
             All core pages are organized here. Connect your wallet and access investments, analytics, governance, and
             portfolio tracking in one place.
           </p>
+          <div className="mt-5">
+            <Link href="/markets">
+              <Button className="bg-yellow-400 text-black hover:bg-yellow-300 font-semibold">
+                Open Full Markets
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

@@ -111,6 +111,16 @@ export default function MarketplacePage() {
           <p className="text-white/70 max-w-3xl mx-auto text-lg">
             Live protocol metrics powered by deployed BSC Testnet contracts.
           </p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <Link href="/markets">
+              <Button className="bg-yellow-400 hover:bg-yellow-300 text-black">Open Full Markets</Button>
+            </Link>
+            <Link href="/submit-product">
+              <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10">
+                Submit Product
+              </Button>
+            </Link>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
