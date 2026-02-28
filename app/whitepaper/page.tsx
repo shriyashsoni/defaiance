@@ -17,35 +17,51 @@ const sections = [
   },
   {
     title: "3. Protocol Architecture",
-    body: "The system is built around DefaianceToken, TreasuryVault, permissionless StartupPoolFactory, InvestmentPool, MarketplaceEscrow, DefaianceDAO, StakingRewards, and TokenVesting contracts deployed on BSC testnet.",
+    body: "The protocol is composed of modular smart contracts on BSC testnet: DefaianceToken, TreasuryVault, StartupPoolFactory, InvestmentPool, MarketplaceEscrow, DefaianceDAO, StakingRewards, TokenVesting, and OracleAdapter. These contracts expose independent responsibilities and are orchestrated by the frontend through wallet-signed transactions.",
   },
   {
-    title: "4. Product Submission and Listing",
+    title: "4. Smart Contracts Inventory",
+    body: "DefaianceToken handles utility token supply and balances. StartupPoolFactory permissionlessly deploys investment pools. Each InvestmentPool manages deposits, shares, and redemption logic. TreasuryVault tracks treasury balances and secure custody logic. DefaianceDAO governs proposal and voting lifecycle. StakingRewards manages rewards distribution for aligned token holders. TokenVesting controls schedule-based token unlocks. MarketplaceEscrow supports trust-minimized deal settlement. OracleAdapter is reserved for external data normalization pathways.",
+  },
+  {
+    title: "5. Product Submission and Listing",
     body: "Builders can submit a product URL, auto-extract metadata via AI scrape, and create investable pools directly on-chain through StartupPoolFactory. Each pool gets a dedicated product page for investor discovery.",
   },
   {
-    title: "5. Investment Mechanics",
-    body: "Users deposit native BNB or approved ERC-20 assets depending on pool configuration. Shares track ownership proportion and can be redeemed using withdraw functions with transparent on-chain pricing.",
+    title: "6. Investment Mechanics",
+    body: "Users invest through on-chain `deposit` transactions into each pool. Native pools use BNB value transfer; token pools require ERC-20 allowance + deposit. Shares represent proportional ownership and `pricePerShare` informs valuation. Redeem value is estimated in-app and executed through on-chain withdraw calls.",
   },
   {
-    title: "6. Governance",
+    title: "7. Redemption and Liquidity",
+    body: "Redemption is deterministic and on-chain. Users choose a redeem percentage and submit wallet-signed withdraw transactions. Payouts are computed from shares burned and pool accounting state. This enables transparent capital exit logic without opaque intermediaries.",
+  },
+  {
+    title: "8. Governance",
     body: "Token holders vote on proposals through DefaianceDAO. Governance controls strategic protocol updates, treasury direction, and ecosystem-level decisions under auditable voting rules.",
   },
   {
-    title: "7. Staking and Incentives",
+    title: "9. Staking and Incentives",
     body: "DFAI holders can stake tokens in StakingRewards to align long-term participation. Reward emissions and balances are publicly verifiable through contract state.",
   },
   {
-    title: "8. Data Layer and Markets",
+    title: "10. Data Layer and Markets",
     body: "The app integrates live market feeds via Google Finance through SerpAPI with fallback resilience. A dedicated Markets Hub aggregates regions, trends, and news in one interface.",
   },
   {
-    title: "9. Security Model",
-    body: "Core contracts use OpenZeppelin standards with role controls where needed, pausable safeguards, and non-reentrancy protections. User actions remain wallet-signed and transparent.",
+    title: "11. Token and Treasury Model",
+    body: "DFAI acts as governance and incentive utility across staking and protocol participation. TreasuryVault tracks strategic reserves and can be governed through DAO policy over time. Vesting logic enforces schedule-based emission control for long-term sustainability.",
   },
   {
-    title: "10. Roadmap",
-    body: "Next milestones include richer pool metadata indexing, stronger submission-to-pool matching, analytics ranking, improved DAO proposal UX, and expanded ecosystem integrations.",
+    title: "12. Security and Risk Controls",
+    body: "Contracts leverage OpenZeppelin standards, explicit access controls, and safeguarded execution patterns. Operational risks include market volatility, oracle quality, governance capture, and smart-contract risk. Mitigations include auditable on-chain state, modular upgrades, and phased rollout strategy.",
+  },
+  {
+    title: "13. Compliance and Transparency",
+    body: "All user-sensitive actions remain wallet-authorized and publicly traceable on chain. Product data submitted by builders is explicit and reviewable. The protocol emphasizes transparent data surfaces rather than hidden scoring and custodial decisioning.",
+  },
+  {
+    title: "14. Roadmap",
+    body: "Near-term milestones include richer pool media metadata, stronger project-to-pool indexing, advanced investor analytics, governance UX upgrades, and broader ecosystem integrations. Mid-term goals include higher reliability indexing services, improved risk scoring modules, and advanced portfolio performance tooling.",
   },
 ]
 

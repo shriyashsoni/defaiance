@@ -10,6 +10,7 @@ import Navigation from "@/components/navigation"
 import AnimatedBackground from "@/components/animated-background"
 import LiveMarketsPanel from "@/components/live-markets-panel"
 import { ABIS, CONTRACTS, getContract, getReadProvider, getWalletContext, getWalletSigner, toEth } from "@/lib/onchain"
+import { getProjectMetaByPool } from "@/lib/investment-projects"
 import { parseEther } from "ethers"
 
 type PoolView = {
@@ -31,6 +32,7 @@ export default function InvestPage() {
   const [txMessage, setTxMessage] = useState<string | null>(null)
   const [txLoadingPool, setTxLoadingPool] = useState<string | null>(null)
   const [poolDepositAmounts, setPoolDepositAmounts] = useState<Record<string, string>>({})
+  const [poolRedeemPercents, setPoolRedeemPercents] = useState<Record<string, string>>({})
 
   const loadData = async () => {
     setLoading(true)
@@ -147,7 +149,12 @@ export default function InvestPage() {
     try {
       setTxLoadingPool(pool.address)
       setTxMessage("Submitting withdraw transaction...")
-      const sharesToBurn = pool.myShares / 10n > 0n ? pool.myShares / 10n : pool.myShares
+      const redeemPercent = Number(poolRedeemPercents[pool.address] ?? "10")
+      const boundedPercent = Number.isFinite(redeemPercent) ? Math.max(1, Math.min(100, redeemPercent)) : 10
+      let sharesToBurn = (pool.myShares * BigInt(Math.floor(boundedPercent * 100))) / 10000n
+      if (sharesToBurn <= 0n) {
+        sharesToBurn = pool.myShares
+      }
       const poolContract = getContract(pool.address, ABIS.investmentPool, signer)
       const tx = await poolContract.withdraw(sharesToBurn)
       await tx.wait()
@@ -225,10 +232,26 @@ export default function InvestPage() {
             {pools.map((pool) => (
               <Card key={pool.address} className="glass-card">
                 <CardHeader>
+                  {(() => {
+                    const projectMeta = getProjectMetaByPool(pool.name, pool.symbol)
+                    if (!projectMeta) return null
+                    return (
+                      <img
+                        src={projectMeta.preview}
+                        alt={projectMeta.name}
+                        className="w-full h-40 object-cover rounded-lg border border-yellow-400/30 mb-3"
+                      />
+                    )
+                  })()}
                   <div className="flex items-center justify-between gap-3">
                     <CardTitle className="text-yellow-300 font-futuristic">{pool.name || "Unnamed Pool"}</CardTitle>
                     <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{pool.symbol || "POOL"}</Badge>
                   </div>
+                  {(() => {
+                    const projectMeta = getProjectMetaByPool(pool.name, pool.symbol)
+                    if (!projectMeta) return null
+                    return <p className="text-xs text-white/70 mt-2">{projectMeta.description}</p>
+                  })()}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
@@ -271,6 +294,28 @@ export default function InvestPage() {
                       placeholder="0.01"
                     />
                   </div>
+                  <div className="pt-1">
+                    <div className="text-xs text-white/60 mb-2">Redeem Percent (1-100)</div>
+                    <input
+                      value={poolRedeemPercents[pool.address] ?? "10"}
+                      onChange={(event) =>
+                        setPoolRedeemPercents((prev) => ({
+                          ...prev,
+                          [pool.address]: event.target.value,
+                        }))
+                      }
+                      className="h-10 rounded-lg border border-yellow-400/40 bg-black px-3 text-white w-full"
+                      placeholder="10"
+                    />
+                    <div className="text-xs text-yellow-200 mt-2">
+                      Estimated redeem at selected percent: {account
+                        ? `${toEth(
+                            (pool.myShares * pool.pricePerShare * BigInt(Math.max(1, Math.min(100, Number(poolRedeemPercents[pool.address] ?? "10") || 10)))) /
+                              (10n ** 18n * 100n),
+                          )} BNB`
+                        : "Connect"}
+                    </div>
+                  </div>
                   <div className="flex gap-3 pt-2">
                     <Button className="bg-yellow-400 hover:bg-yellow-300 text-black" asChild>
                       <a href={`https://testnet.bscscan.com/address/${pool.address}`} target="_blank" rel="noreferrer">
@@ -297,7 +342,7 @@ export default function InvestPage() {
                       disabled={txLoadingPool === pool.address || pool.myShares === 0n}
                       onClick={() => handleWithdraw(pool)}
                     >
-                      Withdraw 10% Shares
+                      Redeem Selected %
                     </Button>
                   </div>
                 </CardContent>

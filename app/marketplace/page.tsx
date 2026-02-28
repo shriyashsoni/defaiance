@@ -5,13 +5,14 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Building2, Coins, ExternalLink, Landmark, ShieldCheck } from "lucide-react"
+import { Building2, Coins, Crown, ExternalLink, Landmark, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
 import AnimatedBackground from "@/components/animated-background"
 import LiveMarketsPanel from "@/components/live-markets-panel"
 import { ABIS, CONTRACTS, getContract, getReadProvider, toEth } from "@/lib/onchain"
 import { WEB3_PROJECTS } from "@/lib/web3-projects"
+import { getProjectMetaByPool } from "@/lib/investment-projects"
 
 export default function MarketplacePage() {
   const [loading, setLoading] = useState(true)
@@ -99,6 +100,36 @@ export default function MarketplacePage() {
       return inCategory && inSearch
     })
   }, [category, search])
+
+  const onchainProjects = useMemo(
+    () =>
+      [...listedPools].reverse().map((pool) => ({
+        ...pool,
+        meta: getProjectMetaByPool(pool.name, pool.symbol),
+      })),
+    [listedPools],
+  )
+
+  const rankLabel = (index: number) => {
+    if (index === 0) return "Gold"
+    if (index === 1) return "Silver"
+    if (index === 2) return "Bronze"
+    return null
+  }
+
+  const rankBadgeClass = (index: number) => {
+    if (index === 0) return "bg-yellow-400/20 border-yellow-400/40 text-yellow-300"
+    if (index === 1) return "bg-white/10 border-white/30 text-white"
+    if (index === 2) return "bg-yellow-300/10 border-yellow-300/30 text-yellow-200"
+    return "bg-yellow-400/20 border-yellow-400/40 text-yellow-300"
+  }
+
+  const rankCardClass = (index: number) => {
+    if (index === 0) return "border-yellow-400/50"
+    if (index === 1) return "border-white/30"
+    if (index === 2) return "border-yellow-300/40"
+    return "border-yellow-400/30"
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -192,6 +223,56 @@ export default function MarketplacePage() {
             <Link href="/submit-product">
               <Button className="bg-yellow-400 hover:bg-yellow-300 text-black">Submit Your Product</Button>
             </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card mb-8 border-yellow-400/30">
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="text-yellow-300 font-futuristic">Live On-Chain Investment Projects</CardTitle>
+              <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{onchainProjects.length} Live Projects</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {onchainProjects.length === 0 ? (
+              <div className="text-white/70 text-sm">No on-chain projects detected yet.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {onchainProjects.map((project, index) => (
+                  <div key={project.address} className={`rounded-xl border p-3 group ${rankCardClass(index)}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs text-white/60 flex items-center gap-1">
+                        {index === 0 ? <Crown className="h-3.5 w-3.5 text-yellow-300 transition-transform duration-300 group-hover:scale-110 group-hover:animate-pulse" /> : null}
+                        #{onchainProjects.length - index}
+                      </div>
+                      {index < 3 && rankLabel(index) ? (
+                        <Badge className={rankBadgeClass(index)}>{rankLabel(index)}</Badge>
+                      ) : null}
+                    </div>
+                    {project.meta?.preview ? (
+                      <img
+                        src={project.meta.preview}
+                        alt={project.name}
+                        className="w-full h-36 object-cover rounded-lg border border-yellow-400/20 mb-3"
+                      />
+                    ) : null}
+                    <div className="text-white font-semibold">{project.name}</div>
+                    <div className="text-xs text-yellow-300/80 mb-1">{project.symbol}</div>
+                    <div className="text-xs text-white/70 mb-3">{project.meta?.description || "On-chain listed investment project."}</div>
+                    <div className="flex flex-wrap gap-2">
+                      <Link href={`/product/${project.address}`}>
+                        <Button className="bg-yellow-400 hover:bg-yellow-300 text-black">Invest Now</Button>
+                      </Link>
+                      <a href={`https://testnet.bscscan.com/address/${project.address}`} target="_blank" rel="noreferrer">
+                        <Button variant="outline" className="border-yellow-400/40 text-white">
+                          View Contract <ExternalLink className="h-4 w-4 ml-2" />
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

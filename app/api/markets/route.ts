@@ -37,11 +37,12 @@ type RawResponse = {
     status?: string
     processed_at?: string
   }
-  markets?: Record<string, MarketRow[]>
+  markets?: Record<string, unknown>
   market_trends?: TrendRow[]
   top_news?: NewsRow
   news_results?: NewsRow[]
   discover_more?: Array<{ title?: string; items?: MarketRow[] }>
+  error?: string
 }
 
 const sections = ["us", "europe", "asia", "currencies", "crypto", "futures"] as const
@@ -126,8 +127,22 @@ export async function GET() {
 
     const json = (await response.json()) as RawResponse
 
+    if (json.error) {
+      throw new Error(json.error)
+    }
+
+    const marketsObj = json.markets || {}
+
+    const getSectionRows = (section: (typeof sections)[number]) => {
+      const raw = marketsObj[section]
+      return Array.isArray(raw) ? (raw as MarketRow[]).slice(0, 8) : []
+    }
+
+    const nestedTopNews = marketsObj["top_news"] as NewsRow | undefined
+    const nestedNewsResults = marketsObj["news_results"] as NewsRow[] | undefined
+
     const markets = sections.reduce<Record<string, MarketRow[]>>((acc, section) => {
-      acc[section] = (json.markets?.[section] || []).slice(0, 8)
+      acc[section] = getSectionRows(section)
       return acc
     }, {})
 
@@ -138,8 +153,8 @@ export async function GET() {
         updatedAt: json.search_metadata?.processed_at || new Date().toISOString(),
         markets,
         marketTrends: json.market_trends || [],
-        topNews: json.top_news || null,
-        newsResults: json.news_results || [],
+        topNews: json.top_news || nestedTopNews || null,
+        newsResults: json.news_results || nestedNewsResults || [],
         discoverMore: json.discover_more || [],
       },
       {
