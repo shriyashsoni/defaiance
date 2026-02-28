@@ -28,14 +28,22 @@ export default function InvestPage() {
   const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
   const [account, setAccount] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [pools, setPools] = useState<PoolView[]>([])
   const [txMessage, setTxMessage] = useState<string | null>(null)
   const [txLoadingPool, setTxLoadingPool] = useState<string | null>(null)
   const [poolDepositAmounts, setPoolDepositAmounts] = useState<Record<string, string>>({})
   const [poolRedeemPercents, setPoolRedeemPercents] = useState<Record<string, string>>({})
 
-  const loadData = async () => {
-    setLoading(true)
+  const loadData = async (mode: "initial" | "manual" | "background" = "initial") => {
+    if (mode === "initial") {
+      setLoading(true)
+    }
+
+    if (mode === "manual") {
+      setRefreshing(true)
+    }
+
     try {
       const readProvider = getReadProvider()
       const { account: walletAccount } = await getWalletContext()
@@ -44,41 +52,55 @@ export default function InvestPage() {
       const factory = getContract(CONTRACTS.startupPoolFactory, ABIS.poolFactory, readProvider)
       const count = Number(await factory.poolsCount())
 
-      const poolList: PoolView[] = []
-      for (let index = 0; index < count; index++) {
-        const poolAddress = await factory.allPools(index)
-        const info = await factory.poolInfo(poolAddress)
-        const poolContract = getContract(poolAddress, ABIS.investmentPool, readProvider)
+      const poolAddresses = await Promise.all(Array.from({ length: count }, (_, index) => factory.allPools(index)))
 
-        const [totalShares, accountedAssets, pricePerShare, myShares] = await Promise.all([
-          poolContract.totalShares(),
-          poolContract.accountedAssets(),
-          poolContract.pricePerShare(),
-          walletAccount ? poolContract.sharesOf(walletAccount) : Promise.resolve(0n),
-        ])
+      const poolList = await Promise.all(
+        poolAddresses.map(async (poolAddress) => {
+          const info = await factory.poolInfo(poolAddress)
+          const poolContract = getContract(poolAddress, ABIS.investmentPool, readProvider)
 
-        poolList.push({
-          address: poolAddress,
-          name: info.name,
-          symbol: info.symbol,
-          asset: info.asset,
-          totalShares,
-          accountedAssets,
-          pricePerShare,
-          myShares,
-        })
-      }
+          const [totalShares, accountedAssets, pricePerShare, myShares] = await Promise.all([
+            poolContract.totalShares(),
+            poolContract.accountedAssets(),
+            poolContract.pricePerShare(),
+            walletAccount ? poolContract.sharesOf(walletAccount) : Promise.resolve(0n),
+          ])
+
+          return {
+            address: poolAddress,
+            name: info.name,
+            symbol: info.symbol,
+            asset: info.asset,
+            totalShares,
+            accountedAssets,
+            pricePerShare,
+            myShares,
+          } as PoolView
+        }),
+      )
 
       setPools(poolList)
     } finally {
-      setLoading(false)
+      if (mode === "initial") {
+        setLoading(false)
+      }
+
+      if (mode === "manual") {
+        setRefreshing(false)
+      }
     }
   }
 
   useEffect(() => {
     loadData()
-    const interval = window.setInterval(loadData, 20000)
-    return () => window.clearInterval(interval)
+
+    const refreshId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadData("background")
+      }
+    }, 180000)
+
+    return () => window.clearInterval(refreshId)
   }, [])
 
   const totalAssets = useMemo(() => pools.reduce((acc, pool) => acc + pool.accountedAssets, 0n), [pools])
@@ -178,6 +200,11 @@ export default function InvestPage() {
           <p className="text-white/70 text-lg max-w-3xl mx-auto">
             Live data from StartupPoolFactory and InvestmentPool contracts on BSC Testnet.
           </p>
+          <div className="mt-4">
+            <Button variant="outline" className="border-yellow-400/40 text-white" onClick={() => loadData("manual")} disabled={refreshing}>
+              {refreshing ? "Refreshing..." : "Refresh Data"}
+            </Button>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
