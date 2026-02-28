@@ -12,12 +12,18 @@ import { ABIS, CONTRACTS, getContract, getReadProvider, getWalletContext, getWal
 import Link from "next/link"
 import LiveMarketsPanel from "@/components/live-markets-panel"
 import { parseEther } from "ethers"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 
 type Holding = {
   pool: string
   name: string
   symbol: string
   shares: bigint
+  redeemValue: bigint
+}
+
+type MarketsPayload = {
+  markets?: Record<string, Array<{ stock?: string; name?: string; price?: number; extracted_price?: number }>>
 }
 
 export default function PortfolioPage() {
@@ -31,6 +37,7 @@ export default function PortfolioPage() {
   const [recentProposalIds, setRecentProposalIds] = useState<number[]>([])
   const [poolCount, setPoolCount] = useState(0)
   const [totalPoolAssets, setTotalPoolAssets] = useState<bigint>(0n)
+  const [bnbUsd, setBnbUsd] = useState<number | null>(null)
   const [stakeAmount, setStakeAmount] = useState("10")
   const [stakingTxMessage, setStakingTxMessage] = useState<string | null>(null)
   const [stakingBusy, setStakingBusy] = useState(false)
@@ -82,14 +89,21 @@ export default function PortfolioPage() {
         const poolAddress = await factory.allPools(index)
         const info = await factory.poolInfo(poolAddress)
         const pool = getContract(poolAddress, ABIS.investmentPool, provider)
-        const [shares, accountedAssets] = await Promise.all([
+        const [shares, accountedAssets, pricePerShare] = await Promise.all([
           pool.sharesOf(walletAccount),
           pool.accountedAssets(),
+          pool.pricePerShare(),
         ])
 
         assetsAcc += accountedAssets
         if (shares > 0n) {
-          rows.push({ pool: poolAddress, name: info.name, symbol: info.symbol, shares })
+          rows.push({
+            pool: poolAddress,
+            name: info.name,
+            symbol: info.symbol,
+            shares,
+            redeemValue: (shares * pricePerShare) / 10n ** 18n,
+          })
         }
       }
 
@@ -106,7 +120,54 @@ export default function PortfolioPage() {
     return () => window.clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    const loadMarket = async () => {
+      try {
+        const response = await fetch("/api/markets", { cache: "no-store" })
+        const json = (await response.json()) as MarketsPayload
+        const allRows = Object.values(json.markets || {}).flat()
+
+        const candidate = allRows.find((row) => {
+          const stock = (row.stock || "").toUpperCase()
+          return stock.includes("BNBUSDT") || stock.includes("BNB-USD") || stock.includes("BNBUSD")
+        })
+
+        const bnbPrice = candidate?.price ?? candidate?.extracted_price
+        if (typeof bnbPrice === "number" && Number.isFinite(bnbPrice)) {
+          setBnbUsd(bnbPrice)
+        }
+      } catch {
+      }
+    }
+
+    loadMarket()
+    const marketInterval = window.setInterval(loadMarket, 25000)
+    return () => window.clearInterval(marketInterval)
+  }, [])
+
   const totalShares = useMemo(() => holdings.reduce((acc, item) => acc + item.shares, 0n), [holdings])
+  const totalRedeemable = useMemo(() => holdings.reduce((acc, item) => acc + item.redeemValue, 0n), [holdings])
+  const totalPortfolioBNB = useMemo(() => walletBNB + totalRedeemable, [walletBNB, totalRedeemable])
+  const totalPortfolioUsd = useMemo(() => (bnbUsd ? Number(toEth(totalPortfolioBNB, 6)) * bnbUsd : null), [bnbUsd, totalPortfolioBNB])
+
+  const allocationChartData = useMemo(
+    () =>
+      holdings.map((item, index) => ({
+        name: item.symbol,
+        value: Number(toEth(item.redeemValue, 6)),
+        color: index % 3 === 0 ? "#facc15" : index % 3 === 1 ? "#fef08a" : "#fde047",
+      })),
+    [holdings],
+  )
+
+  const valueBreakdownChartData = useMemo(
+    () => [
+      { name: "Wallet BNB", value: Number(toEth(walletBNB, 6)), color: "#facc15" },
+      { name: "Redeemable", value: Number(toEth(totalRedeemable, 6)), color: "#fde047" },
+      { name: "Staked DFAI", value: Number(toEth(stakedDFAI, 6)), color: "#fef08a" },
+    ],
+    [walletBNB, totalRedeemable, stakedDFAI],
+  )
 
   const handleStake = async () => {
     const signer = await getWalletSigner()
@@ -242,6 +303,20 @@ export default function PortfolioPage() {
                   <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(totalShares)}</div>
                 </CardContent>
               </Card>
+              <Card className="glass-card md:col-span-2">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">Portfolio Value (BNB)</div>
+                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(totalPortfolioBNB, 4)}</div>
+                </CardContent>
+              </Card>
+              <Card className="glass-card md:col-span-2">
+                <CardContent className="p-5">
+                  <div className="text-white/70 text-sm mb-1">Portfolio Value (USD, Real-Time)</div>
+                  <div className="text-2xl font-semibold text-yellow-300">
+                    {loading ? "..." : totalPortfolioUsd ? `$${totalPortfolioUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "-"}
+                  </div>
+                </CardContent>
+              </Card>
               <Card className="glass-card">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Marketplace Pools</div>
@@ -257,6 +332,52 @@ export default function PortfolioPage() {
             </div>
 
             <LiveMarketsPanel />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="text-yellow-300 font-futuristic">Allocation Pie Chart</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {allocationChartData.length === 0 ? (
+                    <div className="text-white/70 text-sm">No holdings available for chart.</div>
+                  ) : (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={allocationChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
+                            {allocationChartData.map((entry) => (
+                              <Cell key={entry.name} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="text-yellow-300 font-futuristic">Value Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={valueBreakdownChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={90}>
+                          {valueBreakdownChartData.map((entry) => (
+                            <Cell key={entry.name} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             <Card className="glass-card mb-8">
               <CardHeader>
@@ -383,6 +504,7 @@ export default function PortfolioPage() {
                       <div className="text-right">
                         <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300 mb-1">{item.symbol}</Badge>
                         <div className="text-yellow-300 font-semibold">{toEth(item.shares)} shares</div>
+                        <div className="text-xs text-white/70">Redeem est: {toEth(item.redeemValue, 4)} BNB</div>
                       </div>
                     </div>
                   ))
