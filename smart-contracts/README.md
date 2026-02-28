@@ -10,14 +10,16 @@ For the complete on-chain deep dive (all contracts, role model, workflows, and f
 
 ## Verified on BscScan (BSC Testnet)
 
-- DefaianceToken: https://testnet.bscscan.com/address/0x2723a914EA141bf0fBEa66Dd74e52420B372eddA#code
-- TreasuryVault: https://testnet.bscscan.com/address/0x64554e024f0528F413134A7E15d64FE356B01045#code
-- StartupPoolFactory: https://testnet.bscscan.com/address/0xd5222f4a8d111913d7A57F9AE0C251F128Bd8050#code
-- MarketplaceEscrow: https://testnet.bscscan.com/address/0x3468b7eb5F42f5d409194028daA48EDDBC9Df4F1#code
-- OracleAdapter: https://testnet.bscscan.com/address/0xbE3Eee190a1FF8433F0082D965A60092D3F6433d#code
-- DefaianceDAO: https://testnet.bscscan.com/address/0xF541363aF639D19dB8d5a136b87d166Ce1fC1fbA#code
-- StakingRewards: https://testnet.bscscan.com/address/0x33239306014423E21e2E37f1fA495C57a290d13a#code
-- TokenVesting: https://testnet.bscscan.com/address/0xEeda9e7BA71d5383849cC849c150e751323FDb4D#code
+| Contract | Verified Code Link |
+|---|---|
+| DefaianceToken | https://testnet.bscscan.com/address/0x2723a914EA141bf0fBEa66Dd74e52420B372eddA#code |
+| TreasuryVault | https://testnet.bscscan.com/address/0x64554e024f0528F413134A7E15d64FE356B01045#code |
+| StartupPoolFactory | https://testnet.bscscan.com/address/0xd5222f4a8d111913d7A57F9AE0C251F128Bd8050#code |
+| MarketplaceEscrow | https://testnet.bscscan.com/address/0x3468b7eb5F42f5d409194028daA48EDDBC9Df4F1#code |
+| OracleAdapter | https://testnet.bscscan.com/address/0xbE3Eee190a1FF8433F0082D965A60092D3F6433d#code |
+| DefaianceDAO | https://testnet.bscscan.com/address/0xF541363aF639D19dB8d5a136b87d166Ce1fC1fbA#code |
+| StakingRewards | https://testnet.bscscan.com/address/0x33239306014423E21e2E37f1fA495C57a290d13a#code |
+| TokenVesting | https://testnet.bscscan.com/address/0xEeda9e7BA71d5383849cC849c150e751323FDb4D#code |
 
 ## Contracts
 
