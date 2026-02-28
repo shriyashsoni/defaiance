@@ -210,13 +210,13 @@ export default function WalletConnect() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="border-yellow-400/50 text-white hover:bg-yellow-400/10">
-            <Wallet className="mr-2 h-4 w-4" />
-            {address.slice(0, 6)}...{address.slice(-4)}
+          <Button variant="outline" className="border-yellow-400/50 text-white hover:bg-yellow-400/10 max-w-[160px] sm:max-w-none px-2.5 sm:px-4">
+            <Wallet className="mr-1.5 sm:mr-2 h-4 w-4" />
+            <span className="truncate text-xs sm:text-sm">{address.slice(0, 6)}...{address.slice(-4)}</span>
             <ChevronDown className="ml-2 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-black border-yellow-400/50">
+        <DropdownMenuContent className="bg-black border-yellow-400/50 w-72 max-w-[90vw]">
           <div className="p-2">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-white/70">Network:</span>
@@ -248,7 +248,7 @@ export default function WalletConnect() {
     <Button
       onClick={connectWallet}
       disabled={isLoading}
-      className="bg-yellow-400 hover:bg-yellow-300 text-black border-0"
+      className="bg-yellow-400 hover:bg-yellow-300 text-black border-0 px-3 sm:px-4 text-xs sm:text-sm"
     >
       <Wallet className="mr-2 h-4 w-4" />
       {isLoading ? "Connecting..." : "Connect Wallet"}

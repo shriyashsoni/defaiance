@@ -134,14 +134,14 @@ export default function DashboardPage() {
           className="mb-10"
         >
           <Badge className="mb-4 border-yellow-400/60 bg-black text-yellow-300">Wallet Dashboard</Badge>
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-mono gradient-text">DEFAIANCE CONTROL CENTER</h1>
-          <p className="text-yellow-200/80 max-w-3xl text-lg">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 font-mono gradient-text">DEFAIANCE CONTROL CENTER</h1>
+          <p className="text-yellow-200/80 max-w-3xl text-base sm:text-lg">
             All core pages are organized here. Connect your wallet and access investments, analytics, governance, and
             portfolio tracking in one place.
           </p>
           <div className="mt-5">
             <Link href="/markets">
-              <Button className="bg-yellow-400 text-black hover:bg-yellow-300 font-semibold">
+              <Button className="bg-yellow-400 text-black hover:bg-yellow-300 font-semibold w-full sm:w-auto">
                 Open Full Markets
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

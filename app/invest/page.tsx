@@ -196,8 +196,8 @@ export default function InvestPage() {
 
       <div className="container mx-auto px-4 pt-24 pb-12 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text font-futuristic">Invest On-Chain</h1>
-          <p className="text-white/70 text-lg max-w-3xl mx-auto">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 gradient-text font-futuristic">Invest On-Chain</h1>
+          <p className="text-white/70 text-base sm:text-lg max-w-3xl mx-auto">
             Live data from StartupPoolFactory and InvestmentPool contracts on BSC Testnet.
           </p>
           <div className="mt-4">
@@ -211,25 +211,25 @@ export default function InvestPage() {
           <Card className="glass-card">
             <CardContent className="p-5">
               <div className="text-white/70 text-sm mb-1">Active Pools</div>
-              <div className="text-3xl font-bold text-yellow-400">{pools.length}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-yellow-400">{pools.length}</div>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-5">
               <div className="text-white/70 text-sm mb-1">Total Pool Assets</div>
-              <div className="text-3xl font-bold text-yellow-400">{toEth(totalAssets)} BNB</div>
+              <div className="text-2xl sm:text-3xl font-bold text-yellow-400">{toEth(totalAssets)} BNB</div>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-5">
               <div className="text-white/70 text-sm mb-1">Your Total Shares</div>
-              <div className="text-3xl font-bold text-yellow-400">{account ? toEth(totalMyShares) : "Connect"}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-yellow-400">{account ? toEth(totalMyShares) : "Connect"}</div>
             </CardContent>
           </Card>
           <Card className="glass-card md:col-span-3">
             <CardContent className="p-5">
               <div className="text-white/70 text-sm mb-1">Estimated Redeem Value (All Your Shares)</div>
-              <div className="text-3xl font-bold text-yellow-400">{account ? `${toEth(totalRedeemableValue)} BNB` : "Connect"}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-yellow-400">{account ? `${toEth(totalRedeemableValue)} BNB` : "Connect"}</div>
             </CardContent>
           </Card>
         </div>
@@ -281,7 +281,7 @@ export default function InvestPage() {
                   })()}
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div className="rounded-xl border border-yellow-400/30 p-3">
                       <div className="text-white/60">Accounted Assets</div>
                       <div className="text-yellow-300 font-semibold">{toEth(pool.accountedAssets)} BNB</div>
@@ -343,8 +343,8 @@ export default function InvestPage() {
                         : "Connect"}
                     </div>
                   </div>
-                  <div className="flex gap-3 pt-2">
-                    <Button className="bg-yellow-400 hover:bg-yellow-300 text-black" asChild>
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-2">
+                    <Button className="bg-yellow-400 hover:bg-yellow-300 text-black w-full sm:w-auto" asChild>
                       <a href={`https://testnet.bscscan.com/address/${pool.address}`} target="_blank" rel="noreferrer">
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View Contract
@@ -352,7 +352,7 @@ export default function InvestPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="border-yellow-400/40 text-white"
+                      className="border-yellow-400/40 text-white w-full sm:w-auto"
                       disabled={txLoadingPool === pool.address}
                       onClick={() => handleDeposit(pool)}
                     >
@@ -365,7 +365,7 @@ export default function InvestPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="border-yellow-400/40 text-white"
+                      className="border-yellow-400/40 text-white w-full sm:w-auto"
                       disabled={txLoadingPool === pool.address || pool.myShares === 0n}
                       onClick={() => handleWithdraw(pool)}
                     >

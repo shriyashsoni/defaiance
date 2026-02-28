@@ -138,16 +138,16 @@ export default function MarketplacePage() {
 
       <div className="container mx-auto px-4 pt-24 pb-12 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text font-futuristic">On-Chain Marketplace</h1>
-          <p className="text-white/70 max-w-3xl mx-auto text-lg">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 gradient-text font-futuristic">On-Chain Marketplace</h1>
+          <p className="text-white/70 max-w-3xl mx-auto text-base sm:text-lg">
             Live protocol metrics powered by deployed BSC Testnet contracts.
           </p>
-          <div className="mt-4 flex items-center justify-center gap-3">
+          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
             <Link href="/markets">
-              <Button className="bg-yellow-400 hover:bg-yellow-300 text-black">Open Full Markets</Button>
+              <Button className="bg-yellow-400 hover:bg-yellow-300 text-black w-full sm:w-auto">Open Full Markets</Button>
             </Link>
             <Link href="/submit-product">
-              <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10">
+              <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10 w-full sm:w-auto">
                 Submit Product
               </Button>
             </Link>

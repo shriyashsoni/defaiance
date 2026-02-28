@@ -264,8 +264,8 @@ export default function PortfolioPage() {
 
       <div className="container mx-auto px-4 pt-24 pb-12 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-5xl md:text-6xl font-bold mb-3 gradient-text font-futuristic">On-Chain Portfolio</h1>
-          <p className="text-white/70 text-lg">Wallet balances and pool shares read directly from deployed contracts.</p>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-3 gradient-text font-futuristic">On-Chain Portfolio</h1>
+          <p className="text-white/70 text-base sm:text-lg">Wallet balances and pool shares read directly from deployed contracts.</p>
         </motion.div>
 
         {!account ? (
@@ -282,37 +282,37 @@ export default function PortfolioPage() {
               <Card className="glass-card">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Wallet BNB</div>
-                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(walletBNB)}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(walletBNB)}</div>
                 </CardContent>
               </Card>
               <Card className="glass-card">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Wallet DFAI</div>
-                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(walletDFAI)}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(walletDFAI)}</div>
                 </CardContent>
               </Card>
               <Card className="glass-card">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Staked DFAI</div>
-                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(stakedDFAI)}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(stakedDFAI)}</div>
                 </CardContent>
               </Card>
               <Card className="glass-card">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Total Pool Shares</div>
-                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(totalShares)}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(totalShares)}</div>
                 </CardContent>
               </Card>
               <Card className="glass-card md:col-span-2">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Portfolio Value (BNB)</div>
-                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(totalPortfolioBNB, 4)}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">{loading ? "..." : toEth(totalPortfolioBNB, 4)}</div>
                 </CardContent>
               </Card>
               <Card className="glass-card md:col-span-2">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Portfolio Value (USD, Real-Time)</div>
-                  <div className="text-2xl font-semibold text-yellow-300">
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">
                     {loading ? "..." : totalPortfolioUsd ? `$${totalPortfolioUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "-"}
                   </div>
                 </CardContent>
@@ -320,13 +320,13 @@ export default function PortfolioPage() {
               <Card className="glass-card">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">Marketplace Pools</div>
-                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : poolCount}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">{loading ? "..." : poolCount}</div>
                 </CardContent>
               </Card>
               <Card className="glass-card">
                 <CardContent className="p-5">
                   <div className="text-white/70 text-sm mb-1">DAO Proposals</div>
-                  <div className="text-2xl font-semibold text-yellow-300">{loading ? "..." : proposalCount.toString()}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-yellow-300">{loading ? "..." : proposalCount.toString()}</div>
                 </CardContent>
               </Card>
             </div>
@@ -342,7 +342,7 @@ export default function PortfolioPage() {
                   {allocationChartData.length === 0 ? (
                     <div className="text-white/70 text-sm">No holdings available for chart.</div>
                   ) : (
-                    <div className="h-64">
+                    <div className="h-56 sm:h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie data={allocationChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
@@ -363,7 +363,7 @@ export default function PortfolioPage() {
                   <CardTitle className="text-yellow-300 font-futuristic">Value Breakdown</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={valueBreakdownChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={90}>
@@ -391,16 +391,16 @@ export default function PortfolioPage() {
                   <input
                     value={stakeAmount}
                     onChange={(event) => setStakeAmount(event.target.value)}
-                    className="h-10 rounded-lg border border-yellow-400/40 bg-black px-3 text-white"
+                    className="h-10 rounded-lg border border-yellow-400/40 bg-black px-3 text-white w-full md:w-56"
                     placeholder="Amount DFAI"
                   />
-                  <Button className="bg-yellow-400 hover:bg-yellow-300 text-black" disabled={stakingBusy} onClick={handleStake}>
+                  <Button className="bg-yellow-400 hover:bg-yellow-300 text-black w-full md:w-auto" disabled={stakingBusy} onClick={handleStake}>
                     Approve + Stake
                   </Button>
-                  <Button variant="outline" className="border-yellow-400/40 text-white" disabled={stakingBusy} onClick={handleUnstake}>
+                  <Button variant="outline" className="border-yellow-400/40 text-white w-full md:w-auto" disabled={stakingBusy} onClick={handleUnstake}>
                     Unstake
                   </Button>
-                  <Button variant="outline" className="border-yellow-400/40 text-white" disabled={stakingBusy} onClick={handleClaim}>
+                  <Button variant="outline" className="border-yellow-400/40 text-white w-full md:w-auto" disabled={stakingBusy} onClick={handleClaim}>
                     Claim Rewards
                   </Button>
                 </div>
@@ -417,11 +417,11 @@ export default function PortfolioPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
-                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="text-white/70">Your Total Pool Shares</span>
                     <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{toEth(totalShares)}</Badge>
                   </div>
-                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="text-white/70">Total On-Chain Pool Assets</span>
                     <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{toEth(totalPoolAssets, 2)} BNB</Badge>
                   </div>
@@ -439,11 +439,11 @@ export default function PortfolioPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
-                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="text-white/70">Registered Pools</span>
                     <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{poolCount}</Badge>
                   </div>
-                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="text-white/70">Treasury (Wallet view)</span>
                     <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{toEth(walletBNB, 2)} BNB</Badge>
                   </div>
@@ -461,7 +461,7 @@ export default function PortfolioPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
-                  <div className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between">
+                  <div className="rounded-xl border border-yellow-400/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="text-white/70">Total Proposals</span>
                     <Badge className="bg-yellow-400/20 border-yellow-400/40 text-yellow-300">{proposalCount.toString()}</Badge>
                   </div>
@@ -496,7 +496,7 @@ export default function PortfolioPage() {
                   <div className="text-white/70">No pool share positions found for this wallet.</div>
                 ) : (
                   holdings.map((item) => (
-                    <div key={item.pool} className="rounded-xl border border-yellow-400/30 p-3 flex items-center justify-between gap-3">
+                    <div key={item.pool} className="rounded-xl border border-yellow-400/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div>
                         <div className="font-semibold text-white">{item.name}</div>
                         <div className="text-xs text-white/60 break-all">{item.pool}</div>

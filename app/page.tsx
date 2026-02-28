@@ -132,8 +132,8 @@ export default function DefaianceLanding() {
               <Sparkles className="h-3.5 w-3.5 mr-2" />
               Web3 Startup Investing Protocol
             </Badge>
-            <h1 className="text-5xl md:text-7xl font-bold font-futuristic gradient-text mb-4">DEFAIANCE TERMINAL</h1>
-            <p className="text-white/70 max-w-3xl mx-auto text-lg">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold font-futuristic gradient-text mb-4">DEFAIANCE TERMINAL</h1>
+            <p className="text-white/70 max-w-3xl mx-auto text-base sm:text-lg">
               Invest, govern, and track startup assets with live on-chain execution and real-time market intelligence.
             </p>
           </motion.div>
@@ -170,19 +170,19 @@ export default function DefaianceLanding() {
                     ▋
                   </motion.span>
                 </div>
-                <div className="px-4 pb-5 flex flex-wrap gap-3">
+                <div className="px-4 pb-5 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                   <Link href="/dashboard">
-                    <Button className="bg-yellow-400 text-black hover:bg-yellow-300">
+                    <Button className="bg-yellow-400 text-black hover:bg-yellow-300 w-full sm:w-auto">
                       Enter Dashboard <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </Link>
                   <Link href="/invest">
-                    <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10">
+                    <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10 w-full sm:w-auto">
                       Start Investing
                     </Button>
                   </Link>
                   <Link href="/markets">
-                    <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10">
+                    <Button variant="outline" className="border-yellow-400/40 text-white hover:bg-yellow-400/10 w-full sm:w-auto">
                       Open Markets
                     </Button>
                   </Link>
@@ -232,7 +232,7 @@ export default function DefaianceLanding() {
                 className="rounded-xl border border-yellow-400/25 bg-black/60 p-4"
               >
                 <div className="text-xs text-white/50 uppercase tracking-wider">{item.label}</div>
-                <div className="text-lg text-yellow-300 font-semibold mt-1">{item.value}</div>
+                <div className="text-sm sm:text-lg text-yellow-300 font-semibold mt-1">{item.value}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -270,8 +270,8 @@ export default function DefaianceLanding() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 font-futuristic gradient-text">Platform Modules</h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto font-sans">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 font-futuristic gradient-text">Platform Modules</h2>
+            <p className="text-base sm:text-xl text-gray-400 max-w-3xl mx-auto font-sans">
               Everything important is one click away.
             </p>
           </motion.div>
@@ -312,8 +312,8 @@ export default function DefaianceLanding() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 font-futuristic gradient-text">Open Opportunities</h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto font-sans">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 font-futuristic gradient-text">Open Opportunities</h2>
+            <p className="text-base sm:text-xl text-gray-400 max-w-3xl mx-auto font-sans">
               Join the team building the infrastructure for startup finance on-chain.
             </p>
           </motion.div>
@@ -366,17 +366,17 @@ export default function DefaianceLanding() {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto"
           >
-            <motion.h2 className="text-4xl md:text-5xl font-bold mb-6 font-futuristic gradient-text">
+            <motion.h2 className="text-3xl md:text-5xl font-bold mb-6 font-futuristic gradient-text">
               Start Your On-Chain Workflow
             </motion.h2>
-            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto font-sans">
+            <p className="text-base sm:text-xl text-gray-400 mb-8 max-w-2xl mx-auto font-sans">
               Connect your wallet, enter pools, participate in governance, and manage staking from one protocol surface.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/dashboard">
                 <Button
                   size="lg"
-                  className="bg-yellow-400 text-black hover:bg-yellow-300 px-8 py-4 text-lg"
+                  className="bg-yellow-400 text-black hover:bg-yellow-300 px-6 sm:px-8 py-4 text-base sm:text-lg w-full sm:w-auto"
                 >
                   Launch Dashboard <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -385,7 +385,7 @@ export default function DefaianceLanding() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-yellow-400/40 text-white hover:bg-yellow-400/10 px-8 py-4 text-lg"
+                  className="border-yellow-400/40 text-white hover:bg-yellow-400/10 px-6 sm:px-8 py-4 text-base sm:text-lg w-full sm:w-auto"
                 >
                   Explore Marketplace <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>

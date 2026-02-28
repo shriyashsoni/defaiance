@@ -67,16 +67,16 @@ export default function Navigation() {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-black/85 backdrop-blur-md border-b border-yellow-400/30">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
         <motion.div
           className="flex items-center space-x-3"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Link href="/" className="flex items-center space-x-3">
-            <Image src="/logo.png" alt="DEFAIANCE" width={50} height={50} className="rounded-full" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
+          <Link href="/" className="flex items-center space-x-2 sm:space-x-3">
+            <Image src="/logo.png" alt="DEFAIANCE" width={50} height={50} className="rounded-full h-9 w-9 sm:h-12 sm:w-12" />
+            <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
               DEFAIANCE
             </span>
           </Link>
@@ -111,7 +111,7 @@ export default function Navigation() {
           ))}
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <WalletConnect />
 
           {/* Mobile Menu */}
